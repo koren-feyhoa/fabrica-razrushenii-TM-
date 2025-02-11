@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'members.apps.MembersConfig',
     'rest_framework',
     'frontend',
+    'corsheaders'
 ]
 
 MIDDLEWARE = [
@@ -50,7 +51,16 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT PERMISSION CLASSES': [
+        'rest_framework-permissions-AllowAny'
+    ]
+}
+
+CORS_ORGIN_ALLOW_ALL = True
 
 ROOT_URLCONF = 'django_react.urls'
 
