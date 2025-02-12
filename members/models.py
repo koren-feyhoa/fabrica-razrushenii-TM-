@@ -6,4 +6,4 @@ class Member(models.Model):
     vk_id = models.CharField(max_length=100)
     login = models.CharField(max_length=100)
     password = models.CharField(max_length=100)
-    created_at = models.DateTimeField(auto_now_add=False)
+    created_at = models.DateTimeField(auto_now_add=True)
