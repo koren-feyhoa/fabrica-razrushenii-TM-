@@ -1,7 +1,6 @@
-from http.client import HTTPResponse
 
-from django.shortcuts import render
+from django.shortcuts import render, HttpResponse
 
 
 def main(request):
-    return HTTPResponse("<h1>Главная страница</h1>")
+    return HttpResponse("<h1>Главная страница</h1>")
