@@ -24,5 +24,5 @@ urlpatterns = [
     path('user/', include('users.urls')),
     path('events/',include('events.urls')),
     path('',include('start_page.urls')),
-    path('log_in', include('sign_in.urls')),
+    path('', include('sign_in.urls')),
 ]
