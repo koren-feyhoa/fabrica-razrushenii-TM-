@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'main.apps.MainConfig',
     'users.apps.UsersConfig',
     'events.apps.EventsConfig',
+    'start_page.apps.StartPageConfig',
 ]
 
 MIDDLEWARE = [
