@@ -23,4 +23,5 @@ urlpatterns = [
     path('main/', include('main.urls')),
     path('user/', include('users.urls')),
     path('events/',include('events.urls')),
+    path('',include('start_page.urls')),
 ]
