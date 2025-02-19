@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     'users.apps.UsersConfig',
     'events.apps.EventsConfig',
     'start_page.apps.StartPageConfig',
-    'sign_in.apps.SignInConfig'
+    'web.apps.WebConfig',
 ]
 
 MIDDLEWARE = [
