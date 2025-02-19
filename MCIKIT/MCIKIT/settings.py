@@ -43,7 +43,6 @@ INSTALLED_APPS = [
     'main.apps.MainConfig',
     'users.apps.UsersConfig',
     'start_page.apps.StartPageConfig',
-    'web.apps.WebConfig',
     'add_event.apps.AddEventConfig',
 ]
 
