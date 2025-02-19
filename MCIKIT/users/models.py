@@ -13,7 +13,7 @@ class User(models.Model):
         return f"{self.Name_User} | {self.Number_of_group}"
 
 class UserRoles(models.Model):
-    idd= models.AutoField(primary_key=True)
+    id= models.AutoField(primary_key=True)
     uuid = models.ForeignKey(User, on_delete=models.CASCADE, help_text="Пользователь")
     isOrganizer = models.BooleanField()
 
@@ -22,5 +22,5 @@ class UserRoles(models.Model):
         ordering = ['id']
 
     def __str__(self):
-        return f"<{self.idd} | {self.uuid.Name_User} {self.uuid.Number_of_group}|" \
+        return f"<{self.id} | {self.uuid.Name_User} {self.uuid.Number_of_group}|" \
                 f"isOrganizer::{self.isOrganizer}"
