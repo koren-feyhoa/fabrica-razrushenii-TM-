@@ -7,5 +7,7 @@
     <p>Присоединяйтесь к нам</p>
     <li><a href="https://t.me/IKIT_SibFU">Telegram</a></li>
     <li><a href="https://vk.com/mc_ikit">BK</a></li>
-
+    <form method="post" action="{% url 'users:logout' %}">
+        {% csrf_token %}
+    <button type="submit">Выйти</button></form>
 {% endblock %}
