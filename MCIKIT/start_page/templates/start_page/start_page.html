@@ -1,13 +1,46 @@
 {% extends 'start_page/layout.html' %}
 
 {% block title %}Молодежный центр ИКИТ СФУ{% endblock %}
-{% block content %}
-    <h1>Начальная страница</h1>
-    <a href="{% url 'users:login' %}">Войти</a>
-    <a href="{% url 'users:register' %}">Присоединяйтесь к нам</a>
-    <li><a href="https://t.me/IKIT_SibFU">Telegram</a></li>
-    <li><a href="https://vk.com/mc_ikit">BK</a></li>
-    <form method="post" action="{% url 'users:logout' %}">
+{% block logo %}
+<h1>Молодёжный центр ИКИТ СФУ</h1>
+<form method="post" action="https://t.me/IKIT_SibFU">
         {% csrf_token %}
-    <button type="submit">Выйти</button></form>
+    <button type="submit"><i class="fas fa-paper-plane"></i></button></form>
+<form method="post" action="https://vk.com/mc_ikit">
+        {% csrf_token %}
+    <button type="submit"><i class="fab fa-vk"></i></button></form>
+{% endblock %}
+
+{% block content %}
+<h1>КУЛЬТУРНО-МАССОВЫЙ ОТДЕЛ</h1>
+<h2>Начни вести активную студенческую жизнь вместе с нами!</h2>
+<form method="post" action="{% url 'users:login' %}">
+        {% csrf_token %}
+    <button type="submit">Войти</button></form>
+<form method="post" action="{% url 'users:login' %}">
+        {% csrf_token %}
+    <button type="submit">Зарегестрироваться</button></form>
+{% endblock %}
+
+{% block informatoin1 %}
+<h4><i class="fas fa-users"></i> ЗНАКОМСТВА</h4>
+<h6>Шанс познакомиться с творческими и интересными людьми</h6>
+{% endblock %}
+
+
+{% block informatoin2 %}
+<h4><i class="fas fa-handshake"></i> SOFT-SKILLS</h4>
+<h6>Прокачайте свои soft-skills, участвуя в наших мероприятиях</h6>
+{% endblock %}
+
+
+{% block informatoin3 %}
+<h4><i class="fas fa-sun"></i> АКТИВНОСТЬ</h4>
+<h6>Мероприятия проводятся несколько раз в месяц, мы не дадим вам заскучать</h6>
+{% endblock %}
+
+
+{% block informatoin4 %}
+<h4><i class="fab fa-searchengin"></i> РАЗНООБРАЗИЕ</h4>
+<h6>Мероприятия проводятся на разные тематики</h6>
 {% endblock %}
