@@ -5,9 +5,11 @@ from django.http import HttpResponseRedirect
 
 from django.shortcuts import render, redirect
 from django.urls import reverse
+from django.views.generic import CreateView
 from rest_framework.reverse import reverse_lazy
 
-from .forms import LoginUserForm
+from .forms import LoginUserForm, RegisterUserForm
+
 
 class LoginUser(LoginView):
     form_class = LoginUserForm
@@ -15,19 +17,8 @@ class LoginUser(LoginView):
     extra_context = {'title': 'Авторизация'}
 
 
-#def login_user(request):
-#    if request.method=='POST':
-#        form = LoginUserForm(request.POST)
-#        if form.is_valid():
-#            cd=form.cleaned_data
-#            user=authenticate(request,username=cd['username'], password=cd['password'])
-#            if user and user.is_active:
-#                login(request,user)
-#                return HttpResponseRedirect(reverse('start_page')) #Potom izmenit na main
-#    else:
-#        form = LoginUserForm()
-#    return render(request, 'users/login.html', {'form': form})
-#def logout_user(request):
-#    logout(request)
-#    return HttpResponseRedirect(reverse('users:login'))
-
+class RegisterUser(CreateView):
+    form_class = RegisterUserForm
+    template_name = 'users/register.html'
+    extra_context = {'title': "Регистрация"}
+    success_url = reverse_lazy('users:login')

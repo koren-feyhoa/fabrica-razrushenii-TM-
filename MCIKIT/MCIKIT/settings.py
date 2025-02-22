@@ -136,3 +136,5 @@ LOGOUT_REDIRECT_URL='start_page'
 STATICFILES_DIRS = [
         BASE_DIR / "static",
 ]
+
+AUTH_USER_MODEL = 'users.User'

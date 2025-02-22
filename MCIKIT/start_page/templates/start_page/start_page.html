@@ -3,8 +3,8 @@
 {% block title %}Молодежный центр ИКИТ СФУ{% endblock %}
 {% block content %}
     <h1>Начальная страница</h1>
-    <a >Войти</a>
-    <p>Присоединяйтесь к нам</p>
+    <a href="{% url 'users:login' %}">Войти</a>
+    <a href="{% url 'users:register' %}">Присоединяйтесь к нам</a>
     <li><a href="https://t.me/IKIT_SibFU">Telegram</a></li>
     <li><a href="https://vk.com/mc_ikit">BK</a></li>
     <form method="post" action="{% url 'users:logout' %}">
