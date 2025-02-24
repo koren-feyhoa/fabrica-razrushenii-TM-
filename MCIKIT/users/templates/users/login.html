@@ -22,7 +22,7 @@
     {% endfor %}
     <p><button type="submit">Войти</button></p>
     <a href="{% url 'users:register' %}"><p6>Нет аккаунта?</p6></a>
-    <a href=""><p6>Забыл пароль</p6></a>
+    <a href="{% url 'users:password_reset'%}"><p6>Забыл пароль</p6></a>
     <a href="{% url 'users:register' %}"><p6>Зарегистрироваться</p6></a>
 </form>
 </body>
