@@ -6,7 +6,7 @@ class User(AbstractUser):
     VK_id=models.CharField(max_length=30, verbose_name='ВК ID')
     Number_of_events_attended=models.IntegerField(default=0, verbose_name="Количество посещенных мероприятий") #Доделать логику
     Number_of_group=models.CharField(max_length=7, verbose_name="Группа")
-    User_photo=models.ImageField(upload_to="users/%Y/%m/%d/%user_id/", height_field=None, width_field=None, blank=True, null=True,verbose_name="Фоторгафия")
+    Avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
     def __str__(self):
         return f"{self.Name_User} | {self.Number_of_group}"
 
