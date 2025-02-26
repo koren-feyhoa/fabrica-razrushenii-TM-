@@ -1,6 +1,8 @@
 from django import  forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from .models import User
+from django.forms import ModelForm, TextInput
 
 
 class LoginUserForm(AuthenticationForm):
@@ -33,3 +35,15 @@ class RegisterUserForm(UserCreationForm):
         if get_user_model().objects.filter(email=email).exists():
             raise forms.ValidationError("Такой E-mail уже существует!")
         return email
+
+class UserSettingsForm(forms.ModelForm):
+    Name_User = forms.CharField(max_length=30, label='ФИО')
+    VK_id = forms.CharField(max_length=100, label='ВК ID')
+    Number_of_group = forms.CharField(max_length=100, label='Номер группы')
+    email = forms.EmailField(label='Email')
+    username = forms.CharField(max_length=150, label='Логин', disabled=True)  # Делаем поле недоступным для изменения
+    Avatar = forms.ImageField(required=False, label='Аватарка')
+
+    class Meta:
+        model = User
+        fields = ['Name_User', 'VK_id', 'Number_of_group', 'email', 'username', 'Avatar']

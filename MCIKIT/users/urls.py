@@ -1,7 +1,9 @@
+# from tkinter.font import names
+
 from django.contrib.auth.views import LogoutView, PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView, reverse_lazy
 from django.urls import path
 from . import views
-from .views import RegisterUser, profile
+from .views import RegisterUser, profile, UserSettingsView
 
 app_name="users"
 
@@ -24,5 +26,6 @@ urlpatterns=[
              template_name="users/password_reset_confirm.html",
              success_url=reverse_lazy("users:password_reset_complete")), name='password_reset_confirm'),
     path('password-reset/complete/', PasswordResetCompleteView.as_view(template_name="users/password_reset_complete.html"), name='password_reset_complete'),
-    path('account/profile/', profile, name='user_profile'),
+    path('accounts/profile/', profile, name='user_profile'),
+    path('accounts/settings/', UserSettingsView, name='user_settings'),
 ]
