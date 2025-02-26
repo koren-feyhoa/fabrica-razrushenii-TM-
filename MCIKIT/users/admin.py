@@ -13,10 +13,10 @@ from .models import User, UserRoles
 
 class CustomUserAdmin(UserAdmin):
     fieldsets = UserAdmin.fieldsets + (
-        ('Дополнительная информация', {'fields': ('Name_User', 'VK_id', 'Number_of_group', 'User_photo')}),
+        ('Дополнительная информация', {'fields': ('Name_User', 'VK_id', 'Number_of_group', 'Avatar')}),
     )
     add_fieldsets = UserAdmin.add_fieldsets + (
-        ('Дополнительная информация', {'fields': ('Name_User', 'VK_id', 'Number_of_group', 'User_photo')}),
+        ('Дополнительная информация', {'fields': ('Name_User', 'VK_id', 'Number_of_group', 'Avatar')}),
     )
     list_display = ('username', 'email', 'Name_User', 'Number_of_group', 'is_staff') #Добавляем поля для отображения в списке.
 
