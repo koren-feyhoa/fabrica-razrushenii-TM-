@@ -3,4 +3,4 @@ from django.shortcuts import render, HttpResponse
 
 
 def main(request):
-    return HttpResponse("<h1>Главная страница</h1>")
+    return render(request, 'main_page.html')

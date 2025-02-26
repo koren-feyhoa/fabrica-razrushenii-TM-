@@ -1,14 +1,11 @@
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm
-from django.contrib.auth.views import LoginView, PasswordResetView
-from django.http import HttpResponseRedirect
-
-from django.shortcuts import render, redirect
-from django.urls import reverse
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.views import LoginView
+from django.shortcuts import get_object_or_404, render
 from django.views.generic import CreateView
 from rest_framework.reverse import reverse_lazy
 
 from .forms import LoginUserForm, RegisterUserForm
+from .models import User
 
 
 class LoginUser(LoginView):
@@ -22,3 +19,8 @@ class RegisterUser(CreateView):
     template_name = 'users/register.html'
     extra_context = {'title': "Регистрация"}
     success_url = reverse_lazy('users:login')
+
+@login_required
+def profile(request):
+    user = request
+    return render(request, 'users/user_profile.html ')

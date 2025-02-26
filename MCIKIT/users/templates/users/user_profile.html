@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Профиль пользователя</title>
+</head>
+<body>
+<h1>{{ user.Name_User }}</h1>
+    <p>Группа: {{ user.Number_of_group }}</p>
+
+    {% if user.User_photo %}
+        <img src="{{ user.User_photo.url }}" alt="Фотография пользователя" />
+    {% else %}
+        <p>Фотография не загружена.</p>
+    {% endif %}
+
+</body>
+</html>
