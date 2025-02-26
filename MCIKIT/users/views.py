@@ -23,4 +23,4 @@ class RegisterUser(CreateView):
 @login_required
 def profile(request):
     user = request
-    return render(request, 'users/user_profile.html ')
+    return render(request, 'users/user_profile.html')
