@@ -1,46 +1,306 @@
-{% extends 'start_page/layout.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Молодежный центр ИКИТ СФУ</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{% static 'start_page/css/start_page.css' %}">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.2/css/all.css">
+</head>
+<style>
+body {
+    background-color: #1B2D34; /* Синий цвет фона */
+}
 
-{% block title %}Молодежный центр ИКИТ СФУ{% endblock %}
-{% block logo %}
-<h1>Молодёжный центр ИКИТ СФУ</h1>
-<form method="post" action="https://t.me/IKIT_SibFU">
-        {% csrf_token %}
-    <button type="submit"><i class="fas fa-paper-plane"></i></button></form>
-<form method="post" action="https://vk.com/mc_ikit">
-        {% csrf_token %}
-    <button type="submit"><i class="fab fa-vk"></i></button></form>
-{% endblock %}
+/* Логотип Молодежного центра ИКИТ СФУ */
+.LOGO img {
+    position: absolute; /* Позволяет точно задавать позицию */
+    top: 1%; /* Отступ сверху */
+    left: 40%; /* Отступ слева */
+    width: 17%;
+    height: auto;
+}
 
-{% block content %}
-<h1>КУЛЬТУРНО-МАССОВЫЙ ОТДЕЛ</h1>
-<h2>Начни вести активную студенческую жизнь вместе с нами!</h2>
-<form method="post" action="{% url 'users:login' %}">
-        {% csrf_token %}
-    <button type="submit">Войти</button></form>
-<form method="post" action="{% url 'users:register' %}">
-        {% csrf_token %}
-    <button type="submit">Зарегестрироваться</button></form>
-{% endblock %}
-
-{% block informatoin1 %}
-<h4><i class="fas fa-users"></i> ЗНАКОМСТВА</h4>
-<h6>Шанс познакомиться с творческими и интересными людьми</h6>
-{% endblock %}
-
-
-{% block informatoin2 %}
-<h4><i class="fas fa-handshake"></i> SOFT-SKILLS</h4>
-<h6>Прокачайте свои soft-skills, участвуя в наших мероприятиях</h6>
-{% endblock %}
-
-
-{% block informatoin3 %}
-<h4><i class="fas fa-sun"></i> АКТИВНОСТЬ</h4>
-<h6>Мероприятия проводятся несколько раз в месяц, мы не дадим вам заскучать</h6>
-{% endblock %}
+/* Кнопка Войти */
+.BX button {
+    padding: 0.5% 2%;
+    position: absolute;
+    top: 15%; /* Отступ сверху */
+    right: 25%;
+    color: white;
+    font-size: 90%;
+    border: none;
+    background-color: #1B2D34;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
 
 
-{% block informatoin4 %}
-<h4><i class="fab fa-searchengin"></i> РАЗНООБРАЗИЕ</h4>
-<h6>Мероприятия проводятся на разные тематики</h6>
-{% endblock %}
+/* Кнопка Зарегистрироваться */
+.REG button {
+    padding: 0.5% 2%;
+    position: absolute;
+    top: 15%; /* Отступ сверху */
+    right: 10%;
+    color: white;
+    font-size: 90%;
+    border: none;
+    background-color: #385966;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 10px;
+}
+
+
+/* Социальные сети */
+.VK a, .TG a {
+    display: inline-flex;
+    align-items: center;
+}
+.VK img{
+    position: absolute; /* Позволяет точно задавать позицию */
+    top: 15%; /* Отступ сверху */
+    left: 10%; /* Отступ слева */
+}
+.TG img{
+    position: absolute; /* Позволяет точно задавать позицию */
+    top: 15%; /* Отступ сверху */
+    left: 15%; /* Отступ слева */
+
+}
+.VK img, .TG img {
+    width: 3%;
+    height: auto;
+    margin-right: 10px;
+}
+
+.VK a, .TG a {
+    color: white;
+    font-size: 16px;
+    text-decoration: none;
+}
+
+.VK a:hover, .TG a:hover {
+    text-decoration: underline;
+}
+
+.title h1{
+    position: absolute; /* Позволяет точно задавать позицию */
+    top: 40%; /* Отступ сверху */
+    left: 37%; /* Отступ слева */
+    font-size: 150%;
+    color: #02DAEE;
+    font-weight: bold;
+}
+.title h2{
+    position: absolute; /* Позволяет точно задавать позицию */
+    top: 46%; /* Отступ сверху */
+    left: 36%; /* Отступ слева */
+    font-size: 90%;
+    color: white;
+}
+
+.information1 h1{
+    position: absolute; /* Позволяет точно задавать позицию */
+    top: 53%; /* Отступ сверху */
+    left: 23%; /* Отступ слева */
+    font-size: 200%
+}
+.information2 h1{
+    position: absolute; /* Позволяет точно задавать позицию */
+    top: 53%; /* Отступ сверху */
+    left: 40%; /* Отступ слева */
+    font-size: 200%
+}
+.information3 h1{
+    position: absolute; /* Позволяет точно задавать позицию */
+    top: 53%; /* Отступ сверху */
+    left: 56%; /* Отступ слева */
+    font-size: 200%
+}
+.information4 h1{
+    position: absolute; /* Позволяет точно задавать позицию */
+    top: 53%; /* Отступ сверху */
+    left: 74%; /* Отступ слева */
+    font-size: 200%
+}
+.information1 h2{
+    position: absolute; /* Позволяет точно задавать позицию */
+    top: 63%; /* Отступ сверху */
+    left: 21%; /* Отступ слева */
+    font-size: 110%
+}
+.information2 h2{
+    position: absolute; /* Позволяет точно задавать позицию */
+    top: 63%; /* Отступ сверху */
+    left: 38%; /* Отступ слева */
+    font-size: 110%
+}
+.information3 h2{
+    position: absolute; /* Позволяет точно задавать позицию */
+    top: 63%; /* Отступ сверху */
+    left: 54%; /* Отступ слева */
+    font-size: 110%
+}
+.information4 h2{
+    position: absolute; /* Позволяет точно задавать позицию */
+    top: 63%; /* Отступ сверху */
+    left: 71%; /* Отступ слева */
+    font-size: 110%
+}
+.information1 h3{
+    position: absolute; /* Позволяет точно задавать позицию */
+    top: 72%; /* Отступ сверху */
+    left: 19%; /* Отступ слева */
+    font-size: 100%
+}
+.information2 h3{
+    position: absolute; /* Позволяет точно задавать позицию */
+    top: 72%; /* Отступ сверху */
+    left: 38%; /* Отступ слева */
+    font-size: 100%
+}
+.information3 h3{
+    position: absolute; /* Позволяет точно задавать позицию */
+    top: 72%; /* Отступ сверху */
+    left: 54%; /* Отступ слева */
+    font-size: 100%
+}
+.information4 h3{
+    position: absolute; /* Позволяет точно задавать позицию */
+    top: 72%; /* Отступ сверху */
+    left: 72%; /* Отступ слева */
+    font-size: 100%
+}
+.information1 h4{
+    position: absolute; /* Позволяет точно задавать позицию */
+    top: 74%; /* Отступ сверху */
+    left: 20%; /* Отступ слева */
+    font-size: 100%
+}
+.information2 h4{
+    position: absolute; /* Позволяет точно задавать позицию */
+    top: 74%; /* Отступ сверху */
+    left: 36%; /* Отступ слева */
+    font-size: 100%
+}
+.information3 h4{
+    position: absolute; /* Позволяет точно задавать позицию */
+    top: 74%; /* Отступ сверху */
+    left: 52%; /* Отступ слева */
+    font-size: 100%
+}
+.information4 h4{
+    position: absolute; /* Позволяет точно задавать позицию */
+    top: 74%; /* Отступ сверху */
+    left: 69%; /* Отступ слева */
+    font-size: 100%
+}
+.information1 h5{
+    position: absolute; /* Позволяет точно задавать позицию */
+    top: 76%; /* Отступ сверху */
+    left: 19%; /* Отступ слева */
+    font-size: 100%
+}
+.information2 h5{
+    position: absolute; /* Позволяет точно задавать позицию */
+    top: 76%; /* Отступ сверху */
+    left: 35%; /* Отступ слева */
+    font-size: 100%
+}
+.information3 h5{
+    position: absolute; /* Позволяет точно задавать позицию */
+    top: 76%; /* Отступ сверху */
+    left: 53%; /* Отступ слева */
+    font-size: 100%
+}
+.information4 h5{
+    position: absolute; /* Позволяет точно задавать позицию */
+    top: 76%; /* Отступ сверху */
+    left: 69%; /* Отступ слева */
+    font-size: 100%
+}
+.information3 h6{
+    position: absolute; /* Позволяет точно задавать позицию */
+    top: 78%; /* Отступ сверху */
+    left: 52%; /* Отступ слева */
+    font-size: 100%
+}
+.information4 h6{
+    position: absolute; /* Позволяет точно задавать позицию */
+    top: 78%; /* Отступ сверху */
+    left: 71%; /* Отступ слева */
+    font-size: 100%
+}
+.information1,
+.information2,
+.information3,
+.information4{
+    color: white;
+}
+.information1,
+.information2,
+.information3,
+.information4{
+    background: blue;
+}
+.information1 h1,
+.information2 h1,
+.information3 h1,
+.information4 h1{
+    color: white;
+}
+.information1 h2,
+.information2 h2,
+.information3 h2,
+.information4 h2{
+    color: #02DAEE;
+}
+
+</style>
+<body>
+<span class = "VK"><a href="https://vk.com/mc_ikit"><img class = "image" src="static/start_page/image/vk.png" alt="VK"></a></span>
+<span class = "TG"><a href="https://t.me/IKIT_SibFU"><img class = "image" src="static/start_page/image/tg.png" alt="TG"></a></span>
+<span class = "LOGO"><a href="{% url 'start_page' %}"><img class = "image1" src="static/start_page/image/logo.png" alt="LOGO"></a></span>
+
+<span class = "BX"><a href="{% url 'users:login' %}"><button class = "button" type="submit">Войти</button></a></span>
+<span class = "REG"><a href="{% url 'users:register' %}"><button class = "button" type="submit">Зарегистрироваться</button></a></span>
+
+<span class = "title"><h1>КУЛЬТУРНО-МАССОВЫЙ ОТДЕЛ</h1>
+<h2>Начни вести активную студенческую жизнь вместе с нами!</h2></span>
+
+<span class = "information1">
+    <h1><i class="fas fa-users"></i></h1>
+    <h2>ЗНАКОМСТВА</h2>
+    <h3>Шанс познакомиться</h3>
+    <h4>с творческими и</h4>
+    <h5>интересными людьми</h5></span>
+
+<span class = "information2">
+    <h1><i class="fas fa-handshake"></i></h1>
+    <h2>SOFT-SKILLS</h2>
+    <h3>Прокачайте</h3>
+    <h4>soft-skills, участвуя</h4>
+    <h5>в наших мероприятиях</h5></span>
+
+<span class = "information3">
+    <h1><i class="fas fa-sun"></i></h1>
+    <h2></i> АКТИВНОСТЬ</h2>
+    <h3>Мероприятия</h3>
+    <h4>проводятся несколько</h4>
+    <h5>раз в месяц, мы не</h5>
+    <h6>дадим вам заскучать</h6></span>
+
+
+<span class = "information4">
+    <h1><i class="fab fa-searchengin"></i></h1>
+    <h2>РАЗНООБРАЗИЕ</h2>
+    <h3>Проведение</h3>
+    <h4>мероприятий на разные</h4>
+    <h5>тематики, выбирайте на</h5>
+    <h6>свой цвет и вкус</h6></span>
+
+
+</body>
+</html>
