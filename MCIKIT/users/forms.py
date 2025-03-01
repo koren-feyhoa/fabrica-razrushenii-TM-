@@ -41,9 +41,8 @@ class UserSettingsForm(forms.ModelForm):
     VK_id = forms.CharField(max_length=100, label='ВК ID')
     Number_of_group = forms.CharField(max_length=100, label='Номер группы')
     email = forms.EmailField(label='Email')
-    username = forms.CharField(max_length=150, label='Логин', disabled=True)  # Делаем поле недоступным для изменения
     Avatar = forms.ImageField(required=False, label='Аватарка')
 
     class Meta:
         model = User
-        fields = ['Name_User', 'VK_id', 'Number_of_group', 'email', 'username', 'Avatar']
+        fields = ['Name_User', 'VK_id', 'Number_of_group', 'email', 'Avatar']

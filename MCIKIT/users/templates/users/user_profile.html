@@ -6,13 +6,15 @@
 </head>
 <body>
 <h1>{{ user.Name_User }}</h1>
-    <p>Группа: {{ user.Number_of_group }}</p>
+<p>{{ user.Number_of_group }}</p>
+<p>{{ user.username }}</p>
 
-    {% if user.User_photo %}
-        <img src="{{ user.User_photo.url }}" alt="Фотография пользователя" />
-    {% else %}
-        <p>Фотография не загружена.</p>
-    {% endif %}
+{% if user.Avatar %}
+<p><img class="img-article-left" src="{{user.Avatar.url}}"></p>
+{% else %}
+<p>Фотография не загружена.</p>
+{% endif %}
+
 <a href="{% url 'users:user_settings' %}">Настройки</a>
 
 </body>

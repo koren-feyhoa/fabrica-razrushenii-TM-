@@ -32,7 +32,6 @@ def UserSettingsView(request):
         form = UserSettingsForm(request.POST, request.FILES, instance=user)
         if form.is_valid():
             user.email = form.cleaned_data['email']
-            user.Name_User = form.cleaned_data['Name_User']
             user.VK_id = form.cleaned_data['VK_id']
             user.Number_of_group = form.cleaned_data['Number_of_group']
             if 'Avatar' in request.FILES:
