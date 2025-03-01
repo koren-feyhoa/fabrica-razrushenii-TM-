@@ -5,6 +5,11 @@
 <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     {{ form.as_p }}
+    {% if user.Avatar %}
+        <p><img class="img-article-left thumb" src="{{user.Avatar.url}}"></p>
+    {% else %}
+        <p>Фотография не загружена.</p>
+    {% endif %}
     <button type="submit" class="btn btn-primary">Сохранить изменения</button>
     <button type="button" class="btn btn-secondary" onclick="window.location.href='{% url 'users:user_profile' %}'">Отмена</button>
 </form>
