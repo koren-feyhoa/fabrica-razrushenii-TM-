@@ -6,17 +6,17 @@ from django.forms import ModelForm, TextInput
 
 
 class LoginUserForm(AuthenticationForm):
-    username=forms.CharField(label="Логин",
-        widget=forms.TextInput(attrs={'class':'form-input'}))
-    password = forms.CharField(label="Пароль",
-        widget=forms.PasswordInput(attrs={'class': 'form-input'}))
+    username=forms.CharField(label="",
+        widget=forms.TextInput(attrs={'class':'form-input','placeholder':'Логин'}))
+    password = forms.CharField(label="",
+        widget=forms.PasswordInput(attrs={'class': 'form-input','placeholder':'Пароль'}))
     class Meta:
         model=get_user_model()
         fields=['username', 'password']
 
 class RegisterUserForm(UserCreationForm):
-    username = forms.CharField(label="Логин")
-    password1 = forms.CharField(label="Пароль", widget=forms.PasswordInput())
+    username = forms.CharField(label="",widget=forms.TextInput(attrs={'class': 'form-input', 'placeholder':'Логин'}))
+    password1 = forms.CharField(label="",widget=forms.TextInput(attrs={'class': 'form-input', 'placeholder':'Пароль'}))
     password2 = None
     first_name=None
     last_name=None
@@ -24,11 +24,19 @@ class RegisterUserForm(UserCreationForm):
         model=get_user_model()
         fields=['Name_User','Number_of_group','VK_id','email', 'username', 'password1']
         labels= {
-            'Name_User': 'ФИО',
-            'email': 'E-mail',
+            'Name_User': '',
+            'Number_of_group':'',
+            'email': '',
+            'VK_id':'',
+            'username':'',
+            'password1':'',
             }
         widgets={
-            'email': forms.TextInput(attrs={'class': 'form-input'})
+            'Name_User': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'ФИО'}),
+            'email': forms.TextInput(attrs={'class': 'form-input', 'placeholder':'E-mail'}),
+            'Number_of_group': forms.TextInput(attrs={'class': 'form-input', 'placeholder':'Номер группы'}),
+            'VK_id': forms.TextInput(attrs={'class': 'form-input', 'placeholder':'ВК ID'}),
+
         }
     def clean_email(self):
         email=self.cleaned_data['email']

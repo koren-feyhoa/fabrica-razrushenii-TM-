@@ -1,8 +1,8 @@
-
 from django.db import models
 from datetime import datetime, time
 from django.conf import settings
 from django.db.models import ManyToManyField, Avg
+from django.template.context_processors import request
 
 
 class Event(models.Model):
@@ -14,14 +14,17 @@ class Event(models.Model):
     event_time=models.TimeField(blank=False, verbose_name="Время начала", default=time(12, 0))
     Event_photo = models.ImageField(upload_to=None, height_field=None, width_field=None)
     max_members=models.PositiveIntegerField(blank=True, verbose_name="Максимальное количество участников", default=0)
-    users_members=ManyToManyField(settings.AUTH_USER_MODEL,related_name='Участники')
-    prousers_members=ManyToManyField(settings.AUTH_USER_MODEL,related_name='Организаторы')
-
+    users_members=ManyToManyField(settings.AUTH_USER_MODEL,related_name='Участники',blank=True)
+    prousers_members=ManyToManyField(settings.AUTH_USER_MODEL,related_name='Организаторы',blank=True)
+    organizer = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='organized_events', verbose_name='Организатор', on_delete=models.CASCADE)
     def __str__(self):
         return self.title_event
     def average_rate(self):
         result = self.ratings.aggregate(avg_rating=Avg('rating'))
         return result['avg_rating'] or 0
+
+    class Meta:
+        verbose_name = 'Мероприятие'
 
 
 class EventRating(models.Model):
