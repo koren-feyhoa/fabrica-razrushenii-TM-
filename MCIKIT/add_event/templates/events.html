@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h1 class="text-center">{{ event.title_event }}</h1>
+        </div>
+        
+        <div class="card-body">
+            {% if event.Event_photo %}
+                <div class="text-center mb-4">
+                    <img src="{{ event.Event_photo.url }}" alt="{{ event.title_event }}" class="img-fluid rounded">
+                </div>
+            {% endif %}
+
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="event-details">
+                        <h5>Информация о мероприятии:</h5>
+                        <ul class="list-unstyled">
+                            <li><strong>Дата:</strong> {{ event.event_date }}</li>
+                            <li><strong>Время:</strong> {{ event.event_time }}</li>
+                            <li><strong>Место:</strong> {{ event.event_place }}</li>
+                        </ul>
+                        
+                        <div class="mt-3">
+                            <h5>Описание:</h5>
+                            <p>{{ event.description_Event }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            {% if event.max_members > 0 %}
+                                <p class="text-center">
+                                    Участники: {{ registered_count }} / {{ event.max_members }}
+                                </p>
+                            {% endif %}
+
+                            {% if is_organizer %}
+                                <!-- Organizer Controls -->
+                                <div class="d-grid gap-2">
+                                    <a href="{% url 'event_update' event.pk %}" class="btn btn-primary mb-2">
+                                        Изменить мероприятие
+                                    </a>
+                                    <a href="{% url 'event_participants' event.pk %}" class="btn btn-info mb-2">
+                                        Список участников
+                                    </a>
+                                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteEventModal">
+                                        Удалить мероприятие
+                                    </button>
+                                </div>
+                            {% else %}
+                                <!-- User/ProUser Controls -->
+                                <div class="text-center">
+                                    {% if is_registered %}
+                                        <div class="alert alert-success">
+                                            Вы зарегистрированы
+                                        </div>
+                                        <form method="post" action="{% url 'event_unregister' event.pk %}">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-outline-danger">
+                                                Отменить регистрацию
+                                            </button>
+                                        </form>
+                                    {% else %}
+                                        {% if event.max_members == 0 or registered_count < event.max_members %}
+                                            <form method="post" action="{% url 'event_register' event.pk %}">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-success">
+                                                    Зарегистрироваться
+                                                </button>
+                                            </form>
+                                        {% else %}
+                                            <div class="alert alert-warning">
+                                                Регистрация закрыта - достигнуто максимальное количество участников
+                                            </div>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if is_organizer %}
+<!-- Delete Event Modal -->
+<div class="modal fade" id="deleteEventModal" tabindex="-1" aria-labelledby="deleteEventModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteEventModalLabel">Подтверждение удаления</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Вы уверены, что хотите удалить это мероприятие?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <form method="post" action="{% url 'event_delete' event.pk %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Удалить</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if messages %}
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 5">
+    {% for message in messages %}
+        <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto">Уведомление</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body {% if message.tags %}text-{{ message.tags }}{% endif %}">
+                {{ message }}
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}
