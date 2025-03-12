@@ -14,7 +14,10 @@ class Event(models.Model):
     Event_photo = models.ImageField(upload_to=None, height_field=None, width_field=None)
     max_members = models.PositiveIntegerField(blank=True, verbose_name="Максимальное количество участников", default=0)
     users_members = ManyToManyField(settings.AUTH_USER_MODEL, related_name='event_members', blank=True)
-    organizers = ManyToManyField(settings.AUTH_USER_MODEL, related_name='organized_events', blank=True)
+    organizator = models.ForeignKey(settings.AUTH_USER_MODEL,related_name='organizovannye_meropriyatiya',on_delete=models.CASCADE,verbose_name='Организатор')
+    dop_organizatory = models.ManyToManyField(settings.AUTH_USER_MODEL,related_name='dostupnye_meropriyatiya_organizator',blank=True,verbose_name='Дополнительные организаторы')
+
+
 
     def __str__(self):
         return self.title_event
@@ -54,3 +57,12 @@ class EventRating(models.Model):
 
     def __str__(self):
         return f"{self.user.Name_User} rated {self.event.title_event} with {self.rating}"
+
+class Zapis_na_meropriatie(models.Model):
+    event=models.ForeignKey(Event, on_delete=models.CASCADE,verbose_name='Мероприятие')
+    user=models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name='Участник')
+    def __str__(self):
+        return f"{self.user.Name_User} записан на {self.event.title_event}"
+    class Meta:
+        verbose_name = 'Запись на мероприятие'
+        unique_together = ('event', 'user')  # Чтобы исключить двойную запись на одно мероприятие
