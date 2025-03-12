@@ -3,6 +3,7 @@ from datetime import datetime, time
 from django.conf import settings
 from django.db.models import ManyToManyField, Avg
 from django.template.context_processors import request
+from django.apps import apps
 
 
 class Event(models.Model):
@@ -14,24 +15,54 @@ class Event(models.Model):
     Event_photo = models.ImageField(upload_to=None, height_field=None, width_field=None)
     max_members = models.PositiveIntegerField(blank=True, verbose_name="Максимальное количество участников", default=0)
     users_members = ManyToManyField(settings.AUTH_USER_MODEL, related_name='event_members', blank=True)
-    organizator = models.ForeignKey(settings.AUTH_USER_MODEL,related_name='organizovannye_meropriyatiya',on_delete=models.CASCADE,verbose_name='Организатор')
-    dop_organizatory = models.ManyToManyField(settings.AUTH_USER_MODEL,related_name='dostupnye_meropriyatiya_organizator',blank=True,verbose_name='Дополнительные организаторы')
-
-
+    organizers = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        through='users.EventOrganizer',
+        through_fields=('event', 'user'),
+        related_name='events_organized',
+        blank=True
+    )
 
     def __str__(self):
         return self.title_event
 
     def is_user_registered(self, user):
+        """Проверяет, зарегистрирован ли пользователь на мероприятие"""
         return user in self.users_members.all()
 
     def is_user_organizer(self, user):
-        return user in self.organizers.all()
+        """Проверяет, является ли пользователь организатором мероприятия"""
+        if not user.is_authenticated:
+            return False
+        EventOrganizer = apps.get_model('users', 'EventOrganizer')
+        return EventOrganizer.objects.filter(event=self, user=user).exists()
 
     def get_registered_count(self):
+        """Возвращает количество зарегистрированных участников"""
         return self.users_members.count()
 
+    def get_organizers(self):
+        """Возвращает список всех организаторов мероприятия"""
+        EventOrganizer = apps.get_model('users', 'EventOrganizer')
+        return EventOrganizer.objects.filter(event=self).select_related('user')
+
+    def add_organizer(self, user, added_by):
+        """Добавляет нового организатора к мероприятию"""
+        if not self.is_user_organizer(user):
+            EventOrganizer = apps.get_model('users', 'EventOrganizer')
+            EventOrganizer.objects.create(
+                user=user,
+                event=self,
+                added_by=added_by
+            )
+
+    def remove_organizer(self, user):
+        """Удаляет организатора из мероприятия"""
+        EventOrganizer = apps.get_model('users', 'EventOrganizer')
+        EventOrganizer.objects.filter(event=self, user=user).delete()
+
     def average_rate(self):
+        """Возвращает среднюю оценку мероприятия"""
         result = self.ratings.aggregate(avg_rating=Avg('rating'))
         return result['avg_rating'] or 0
 
@@ -53,16 +84,7 @@ class EventRating(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('user', 'event') # Один пользователь может оставить только одну оценку для мероприятия
+        unique_together = ('user', 'event')  # Один пользователь может оставить только одну оценку для мероприятия
 
     def __str__(self):
         return f"{self.user.Name_User} rated {self.event.title_event} with {self.rating}"
-
-class Zapis_na_meropriatie(models.Model):
-    event=models.ForeignKey(Event, on_delete=models.CASCADE,verbose_name='Мероприятие')
-    user=models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name='Участник')
-    def __str__(self):
-        return f"{self.user.Name_User} записан на {self.event.title_event}"
-    class Meta:
-        verbose_name = 'Запись на мероприятие'
-        unique_together = ('event', 'user')  # Чтобы исключить двойную запись на одно мероприятие

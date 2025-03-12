@@ -5,6 +5,11 @@
     <title>Главная страница</title>
 </head>
 <body>
-<a href="{% url 'users:user_profile' %}">Профиль</a>
+<div class="nav-links">
+        <a href="{% url 'users:user_profile' %}">Профиль</a>
+        {% if user.is_super_user %}
+            <a href="{% url 'users:user_list' %}" class="admin-button">Управление пользователями</a>
+        {% endif %}
+    </div>
 </body>
 </html>

@@ -7,6 +7,7 @@ from django.contrib import messages
 from django.http import HttpResponseForbidden
 
 from .models import Event
+from users.models import EventOrganizer
 
 
 def add_event(request):
@@ -25,18 +26,22 @@ class EventCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     fields = ['title_event', 'description_Event',
               'event_place', 'event_date',
               'event_time', 'Event_photo',
-              'max_members']  # Fixed field name from max_member to max_members
+              'max_members']
     template_name = 'events/event_create.html'
     success_url = reverse_lazy('event_list')
 
     def form_valid(self, form):
-        form.instance.organizer = self.request.user
         response = super().form_valid(form)
-        self.object.organizers.add(self.request.user)  # Add creator as organizer
+        # Создаем запись организатора через модель EventOrganizer
+        EventOrganizer.objects.create(
+            user=self.request.user,
+            event=self.object,
+            added_by=self.request.user
+        )
         return response
 
     def test_func(self):
-        return self.request.user.groups.filter(name='Активисты').exists()
+        return self.request.user.is_pro_user()
 
 
 class EventUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
@@ -44,24 +49,24 @@ class EventUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     fields = ['title_event', 'description_Event',
               'event_place', 'event_date',
               'event_time', 'Event_photo',
-              'max_members']  # Fixed field name
+              'max_members']
     template_name = 'events/event_update.html'
     success_url = reverse_lazy('event_list')
     context_object_name = 'event'
 
     def test_func(self):
         event = self.get_object()
-        return event.is_user_organizer(self.request.user)  # Using the model method
+        return event.is_user_organizer(self.request.user)
 
 
 class EventParticipantsView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     model = Event
-    template_name = 'events/event_participants.html' # Создайте шаблон events/event_participants.html
+    template_name = 'events/event_participants.html'
     context_object_name = 'event'
 
     def test_func(self):
         event = self.get_object()
-        return event.organizer == self.request.user or self.request.user in event.authorized_editors.all() # Доступ только организатору и со-организаторам
+        return event.is_user_organizer(self.request.user)
 
 
 class EventDetailView(DetailView):
@@ -74,7 +79,7 @@ class EventDetailView(DetailView):
         event = self.get_object()
         user = self.request.user
 
-        # Determine user role
+        # Определяем роль пользователя
         is_organizer = event.is_user_organizer(user)
         is_registered = event.is_user_registered(user)
 
@@ -85,7 +90,6 @@ class EventDetailView(DetailView):
         })
 
         return context
-
 
 
 @login_required
@@ -101,6 +105,7 @@ def event_register(request, pk):
         return redirect('event_detail', pk=pk)
     return HttpResponseForbidden()
 
+
 @login_required
 def event_unregister(request, pk):
     if request.method == 'POST':
@@ -110,6 +115,7 @@ def event_unregister(request, pk):
             messages.success(request, 'Регистрация отменена')
         return redirect('event_detail', pk=pk)
     return HttpResponseForbidden()
+
 
 @login_required
 def event_delete(request, pk):
