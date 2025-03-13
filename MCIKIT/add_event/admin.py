@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import Event, EventRating
 from django.db.models import Avg
 
-from MCIKIT.users.admin import EventOrganizerInline
+from users.admin import EventOrganizerInline
 
 
 @admin.register(Event)
@@ -15,5 +15,4 @@ class EventAdmin(admin.ModelAdmin):
 
     average_rating.short_description = 'Средний рейтинг'
 
-admin.site.register(Event, EventAdmin)
 admin.site.register(EventRating)

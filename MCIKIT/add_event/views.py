@@ -6,9 +6,14 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import HttpResponseForbidden
 
+from .forms import EventForm
 from .models import Event
 from users.models import EventOrganizer
 
+from django.http import JsonResponse
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 def add_event(request):
     return redirect('event_create')
@@ -23,12 +28,34 @@ class EventListView(ListView):
 
 class EventCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = Event
-    fields = ['title_event', 'description_Event',
-              'event_place', 'event_date',
-              'event_time', 'Event_photo',
-              'max_members']
+    form_class = EventForm
     template_name = 'events/event_create.html'
     success_url = reverse_lazy('event_list')
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        # Создаем запись организатора через модель EventOrganizer для создателя события
+        EventOrganizer.objects.create(
+            user=self.request.user,
+            event=self.object,
+            added_by=self.request.user
+        )
+
+        # Добавляем дополнительных организаторов
+        additional_organizers = form.cleaned_data.get('additional_organizers', [])
+        for organizer in additional_organizers:
+            if organizer != self.request.user:  # Пропускаем, если организатор уже является создателем
+                EventOrganizer.objects.create(
+                    user=organizer,
+                    event=self.object,
+                    added_by=self.request.user
+                )
+
+        messages.success(self.request, 'Мероприятие успешно создано')
+        return response
+
+    def test_func(self):
+        return self.request.user.is_pro_user()
 
     def form_valid(self, form):
         response = super().form_valid(form)
@@ -127,3 +154,8 @@ def event_delete(request, pk):
             return redirect('event_list')
         return HttpResponseForbidden('У вас нет прав для удаления этого мероприятия')
     return HttpResponseForbidden()
+
+def get_pro_users(request):
+    """Возвращает список ProUser в формате JSON"""
+    pro_users = User.objects.filter(role__in=['pro_user', 'super_user']).values('id', 'Name_User')
+    return JsonResponse(list(pro_users), safe=False)

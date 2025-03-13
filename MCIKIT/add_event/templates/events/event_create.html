@@ -1,0 +1,307 @@
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Создание нового мероприятия</h2>
+
+    <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+        {% csrf_token %}
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <!-- Основные поля -->
+                <div class="mb-3">
+                    <label for="{{ form.title_event.id_for_label }}" class="form-label">Название мероприятия</label>
+                    {{ form.title_event }}
+                    {% if form.title_event.errors %}
+                        <div class="invalid-feedback">{{ form.title_event.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.description_Event.id_for_label }}" class="form-label">Описание мероприятия</label>
+                    {{ form.description_Event }}
+                    {% if form.description_Event.errors %}
+                        <div class="invalid-feedback">{{ form.description_Event.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.event_date.id_for_label }}" class="form-label">Дата проведения</label>
+                            {{ form.event_date }}
+                            {% if form.event_date.errors %}
+                                <div class="invalid-feedback">{{ form.event_date.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.event_time.id_for_label }}" class="form-label">Время начала</label>
+                            {{ form.event_time }}
+                            {% if form.event_time.errors %}
+                                <div class="invalid-feedback">{{ form.event_time.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.event_place.id_for_label }}" class="form-label">Место проведения</label>
+                    {{ form.event_place }}
+                    {% if form.event_place.errors %}
+                        <div class="invalid-feedback">{{ form.event_place.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.Event_photo.id_for_label }}" class="form-label">Фото мероприятия</label>
+                    {{ form.Event_photo }}
+                    {% if form.Event_photo.errors %}
+                        <div class="invalid-feedback">{{ form.Event_photo.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Кнопка для дополнительных настроек -->
+                <button class="btn btn-outline-primary w-100 mb-3" type="button" onclick="toggleSettings()">
+                    Дополнительные настройки
+                </button>
+
+                <!-- Выпадающая секция с дополнительными настройками -->
+                <div id="additionalSettings" style="display: none;">
+                    <div class="card card-body">
+                        <div class="mb-3">
+                            <label for="{{ form.max_members.id_for_label }}" class="form-label">
+                                Максимальное количество участников
+                            </label>
+                            {{ form.max_members }}
+                            <small class="form-text text-muted">0 - без ограничений</small>
+                            {% if form.max_members.errors %}
+                                <div class="invalid-feedback">{{ form.max_members.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Организаторы</label>
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="openOrganizersModal()">
+                                Управление организаторами
+                            </button>
+                            <!-- Скрытое поле для хранения выбранных организаторов -->
+                            {{ form.additional_organizers }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+            <a href="{% url 'event_list' %}" class="btn btn-secondary me-md-2">Отмена</a>
+            <button type="submit" class="btn btn-primary">Создать мероприятие</button>
+        </div>
+    </form>
+</div>
+
+<!-- Модальное окно для управления организаторами -->
+<div id="organizersModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5>Управление организаторами</h5>
+            <span class="close" onclick="closeOrganizersModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="current-organizers mb-3">
+                <h6>Текущие организаторы:</h6>
+                <ul id="organizersList" class="list-group">
+                    <!-- Список будет заполнен через JavaScript -->
+                </ul>
+            </div>
+            <div class="add-organizer">
+                <h6>Добавить организатора:</h6>
+                <button type="button" class="btn btn-outline-success btn-sm" onclick="toggleProUsersList()">
+                    + Добавить ProUser
+                </button>
+                <div id="proUsersList" style="display: none;" class="mt-2">
+                    <!-- Список будет заполнен через JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 500px;
+    border-radius: 5px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.close {
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover {
+    color: black;
+}
+
+.list-group-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Функция для переключения видимости дополнительных настроек
+    function toggleSettings() {
+        var settings = document.getElementById('additionalSettings');
+        if (settings.style.display === 'none') {
+            settings.style.display = 'block';
+        } else {
+            settings.style.display = 'none';
+        }
+    }
+
+    // Модальное окно для организаторов
+    var modal = document.getElementById('organizersModal');
+    var selectedOrganizers = new Set();
+
+    function openOrganizersModal() {
+        modal.style.display = 'block';
+        updateOrganizersList();
+    }
+
+    function closeOrganizersModal() {
+        modal.style.display = 'none';
+    }
+
+    function toggleProUsersList() {
+        var proUsersList = document.getElementById('proUsersList');
+        if (proUsersList.style.display === 'none') {
+            loadProUsers();
+            proUsersList.style.display = 'block';
+        } else {
+            proUsersList.style.display = 'none';
+        }
+    }
+
+    function loadProUsers() {
+        // Загрузка списка ProUser через AJAX
+        fetch('{% url "get_pro_users" %}')
+            .then(response => response.json())
+            .then(data => {
+                const proUsersList = document.getElementById('proUsersList');
+                proUsersList.innerHTML = '';
+                const ul = document.createElement('ul');
+                ul.className = 'list-group';
+
+                data.forEach(user => {
+                    if (!selectedOrganizers.has(user.id)) {
+                        const li = document.createElement('li');
+                        li.className = 'list-group-item';
+                        li.innerHTML = `
+                            ${user.Name_User}
+                            <button class="btn btn-sm btn-outline-primary"
+                                    onclick="addOrganizer(${user.id}, '${user.Name_User}')">
+                                Добавить
+                            </button>
+                        `;
+                        ul.appendChild(li);
+                    }
+                });
+
+                proUsersList.appendChild(ul);
+            });
+    }
+
+    function addOrganizer(userId, userName) {
+        selectedOrganizers.add(userId);
+        updateOrganizersList();
+        updateHiddenField();
+        toggleProUsersList();
+    }
+
+    function removeOrganizer(userId) {
+        selectedOrganizers.delete(userId);
+        updateOrganizersList();
+        updateHiddenField();
+    }
+
+    function updateOrganizersList() {
+        const organizersList = document.getElementById('organizersList');
+        organizersList.innerHTML = '';
+
+        selectedOrganizers.forEach(userId => {
+            const li = document.createElement('li');
+            li.className = 'list-group-item';
+            li.innerHTML = `
+                ${userId}
+                <button class="btn btn-sm btn-outline-danger"
+                        onclick="removeOrganizer(${userId})">
+                    Удалить
+                </button>
+            `;
+            organizersList.appendChild(li);
+        });
+    }
+
+    function updateHiddenField() {
+        const hiddenField = document.querySelector('select[name="additional_organizers"]');
+        const selectedValues = Array.from(selectedOrganizers);
+
+        // Обновляем выбранные значения в скрытом поле select
+        Array.from(hiddenField.options).forEach(option => {
+            option.selected = selectedValues.includes(parseInt(option.value));
+        });
+    }
+
+    // Валидация формы
+    (function () {
+        'use strict'
+        var forms = document.querySelectorAll('.needs-validation')
+        Array.prototype.slice.call(forms).forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault()
+                    event.stopPropagation()
+                }
+                form.classList.add('was-validated')
+            }, false)
+        })
+    })()
+
+    // Закрытие модального окна при клике вне его
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            closeOrganizersModal();
+        }
+    }
+</script>
+{% endblock %}

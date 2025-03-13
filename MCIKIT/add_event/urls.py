@@ -9,7 +9,8 @@ from .views import (
     event_register,
     event_unregister,
     event_delete,
-    add_event
+    add_event,
+    get_pro_users
 )
 
 urlpatterns = [
@@ -22,4 +23,5 @@ urlpatterns = [
     path('<int:pk>/register/', event_register, name='event_register'),
     path('<int:pk>/unregister/', event_unregister, name='event_unregister'),
     path('<int:pk>/delete/', event_delete, name='event_delete'),
+    path('get-pro-users/', get_pro_users, name='get_pro_users'),
 ]
