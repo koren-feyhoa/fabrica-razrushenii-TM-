@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h2 class="mb-4">Создание нового мероприятия</h2>
+    <h2 class="mb-4">Изменение мероприятия</h2>
 
     <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
         {% csrf_token %}
@@ -29,8 +29,13 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label for="{{ form.event_date.id_for_label }}" class="form-label">Дата проведения</label>
-                            {{ form.event_date }}
+                            <label for="id_event_date" class="form-label">Дата проведения</label>
+                            <input type="date"
+                                   name="event_date"
+                                   class="form-control"
+                                   id="id_event_date"
+                                   value="{{ event.event_date|date:'Y-m-d' }}"
+                                   required>
                             {% if form.event_date.errors %}
                                 <div class="invalid-feedback">{{ form.event_date.errors }}</div>
                             {% endif %}
@@ -38,8 +43,13 @@
                     </div>
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label for="{{ form.event_time.id_for_label }}" class="form-label">Время начала</label>
-                            {{ form.event_time }}
+                            <label for="id_event_time" class="form-label">Время начала</label>
+                            <input type="time"
+                                   name="event_time"
+                                   class="form-control"
+                                   id="id_event_time"
+                                   value="{{ event.event_time|time:'H:i' }}"
+                                   required>
                             {% if form.event_time.errors %}
                                 <div class="invalid-feedback">{{ form.event_time.errors }}</div>
                             {% endif %}
@@ -57,20 +67,20 @@
 
                 <div class="mb-3">
                     <label for="{{ form.Event_photo.id_for_label }}" class="form-label">Фото мероприятия</label>
+                    {% if event.Event_photo %}
+                        <div class="mb-2">
+                            <img src="{{ event.Event_photo.url }}" alt="Текущее фото" class="img-thumbnail" style="max-height: 200px;">
+                        </div>
+                    {% endif %}
                     {{ form.Event_photo }}
                     {% if form.Event_photo.errors %}
                         <div class="invalid-feedback">{{ form.Event_photo.errors }}</div>
                     {% endif %}
                 </div>
 
-                <!-- Кнопка для дополнительных настроек -->
-                <button class="btn btn-outline-primary w-100 mb-3" type="button" onclick="toggleSettings()">
-                    Дополнительные настройки
-                </button>
-
-                <!-- Выпадающая секция с дополнительными настройками -->
-                <div id="additionalSettings" style="display: none;">
-                    <div class="card card-body">
+                <!-- Дополнительные настройки -->
+                <div class="card mb-3">
+                    <div class="card-body">
                         <div class="mb-3">
                             <label for="{{ form.max_members.id_for_label }}" class="form-label">
                                 Максимальное количество участников
@@ -96,8 +106,8 @@
         </div>
 
         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-            <a href="{% url 'add_events:event_list' %}" class="btn btn-secondary me-md-2">Отмена</a>
-            <button type="submit" class="btn btn-primary">Создать мероприятие</button>
+            <a href="{% url 'add_events:event_detail_view' event.pk %}" class="btn btn-secondary me-md-2">Отмена</a>
+            <button type="submit" class="btn btn-primary">Сохранить изменения</button>
         </div>
     </form>
 </div>
@@ -129,66 +139,10 @@
     </div>
 </div>
 
-<style>
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.5);
-}
-
-.modal-content {
-    background-color: #fefefe;
-    margin: 15% auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%;
-    max-width: 500px;
-    border-radius: 5px;
-}
-
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-}
-
-.close {
-    color: #aaa;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.close:hover {
-    color: black;
-}
-
-.list-group-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-</style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    // Функция для переключения видимости дополнительных настроек
-    function toggleSettings() {
-        var settings = document.getElementById('additionalSettings');
-        if (settings.style.display === 'none') {
-            settings.style.display = 'block';
-        } else {
-            settings.style.display = 'none';
-        }
-    }
-
     // Модальное окно для организаторов
     var modal = document.getElementById('organizersModal');
     var selectedOrganizers = new Set();
@@ -213,7 +167,6 @@
     }
 
     function loadProUsers() {
-        // Загрузка списка ProUser через AJAX
         fetch('{% url "add_events:get_pro_users" %}')
             .then(response => response.json())
             .then(data => {
@@ -276,26 +229,21 @@
         const hiddenField = document.querySelector('select[name="additional_organizers"]');
         const selectedValues = Array.from(selectedOrganizers);
 
-        // Обновляем выбранные значения в скрытом поле select
         Array.from(hiddenField.options).forEach(option => {
             option.selected = selectedValues.includes(parseInt(option.value));
         });
     }
 
-    // Валидация формы
-    (function () {
-        'use strict'
-        var forms = document.querySelectorAll('.needs-validation')
-        Array.prototype.slice.call(forms).forEach(function (form) {
-            form.addEventListener('submit', function (event) {
-                if (!form.checkValidity()) {
-                    event.preventDefault()
-                    event.stopPropagation()
-                }
-                form.classList.add('was-validated')
-            }, false)
-        })
-    })()
+    // Инициализация выбранных организаторов из формы
+    document.addEventListener('DOMContentLoaded', function() {
+        const hiddenField = document.querySelector('select[name="additional_organizers"]');
+        Array.from(hiddenField.options).forEach(option => {
+            if (option.selected) {
+                selectedOrganizers.add(parseInt(option.value));
+            }
+        });
+        updateOrganizersList();
+    });
 
     // Закрытие модального окна при клике вне его
     window.onclick = function(event) {
@@ -304,4 +252,51 @@
         }
     }
 </script>
+
+<style>
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 500px;
+    border-radius: 5px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.close {
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover {
+    color: black;
+}
+
+.list-group-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+</style>
 {% endblock %}

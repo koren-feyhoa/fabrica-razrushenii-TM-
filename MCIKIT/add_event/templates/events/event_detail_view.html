@@ -38,11 +38,11 @@
 
                 {% if is_organizer %}
                     <div class="d-flex gap-2 mb-3">
-                        <a href="{% url 'event_update' event.pk %}" class="btn btn-primary">Изменить мероприятие</a>
+                        <a href="{% url 'add_events:event_update' event.pk %}" class="btn btn-primary">Изменить мероприятие</a>
                         <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#participantsModal">
                             Посмотреть участников
                         </button>
-                        <form action="{% url 'event_delete' event.pk %}" method="post" class="d-inline" onsubmit="return confirm('Вы уверены, что хотите удалить это мероприятие?');">
+                        <form action="{% url 'add_events:event_delete' event.pk %}" method="post" class="d-inline" onsubmit="return confirm('Вы уверены, что хотите удалить это мероприятие?');">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-danger">Удалить мероприятие</button>
                         </form>
@@ -51,14 +51,14 @@
                     {% if is_registered %}
                         <div class="alert alert-success">
                             Вы уже зарегистрированы на это мероприятие
-                            <form action="{% url 'event_unregister' event.pk %}" method="post" class="d-inline">
+                            <form action="{% url 'add_events:event_unregister' event.pk %}" method="post" class="d-inline">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-warning ms-2">Отменить регистрацию</button>
                             </form>
                         </div>
                     {% else %}
                         {% if event.max_members == 0 or registered_count < event.max_members %}
-                            <form action="{% url 'event_register' event.pk %}" method="post">
+                            <form action="{% url 'add_events:event_register' event.pk %}" method="post">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-success">Зарегистрироваться</button>
                             </form>

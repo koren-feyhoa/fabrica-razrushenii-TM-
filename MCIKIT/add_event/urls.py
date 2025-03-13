@@ -13,6 +13,8 @@ from .views import (
     get_pro_users
 )
 
+app_name = 'add_events'
+
 urlpatterns = [
     path('', EventListView.as_view(), name='event_list'),
     path('add/', add_event, name='add_event'),

@@ -1,17 +1,32 @@
 from django import forms
 from .models import Event
 from django.contrib.auth import get_user_model
+from django.utils.dateparse import parse_date, parse_time
 
 User = get_user_model()
 
 class EventForm(forms.ModelForm):
     event_date = forms.DateField(
-        widget=forms.DateInput(attrs={'type': 'date'}),
-        help_text="Дата проведения мероприятия"
+        required=True,
+        help_text="Дата проведения мероприятия",
+        widget=forms.DateInput(
+            format='%Y-%m-%d',
+            attrs={
+                'type': 'date',
+                'class': 'form-control',
+            }
+        )
     )
     event_time = forms.TimeField(
-        widget=forms.TimeInput(attrs={'type': 'time'}),
-        help_text="Время начала мероприятия"
+        required=True,
+        help_text="Время начала мероприятия",
+        widget=forms.TimeInput(
+            format='%H:%M',
+            attrs={
+                'type': 'time',
+                'class': 'form-control',
+            }
+        )
     )
     additional_organizers = forms.ModelMultipleChoiceField(
         queryset=User.objects.filter(role__in=['pro_user', 'super_user']),
@@ -33,9 +48,9 @@ class EventForm(forms.ModelForm):
             'additional_organizers'
         ]
         widgets = {
-            'title_event': forms.TextInput(attrs={'class': 'form-control'}),
-            'description_Event': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
-            'event_place': forms.TextInput(attrs={'class': 'form-control'}),
+            'title_event': forms.TextInput(attrs={'class': 'form-control', 'required': True}),
+            'description_Event': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'required': True}),
+            'event_place': forms.TextInput(attrs={'class': 'form-control', 'required': True}),
             'Event_photo': forms.FileInput(attrs={'class': 'form-control'}),
             'max_members': forms.NumberInput(attrs={'class': 'form-control', 'min': '0'}),
         }

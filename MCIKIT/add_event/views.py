@@ -8,15 +8,16 @@ from django.http import HttpResponseForbidden
 
 from .forms import EventForm
 from .models import Event
-from users.models import EventOrganizer
+from users.models import EventOrganizer, User
 
 from django.http import JsonResponse
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
+
 def add_event(request):
-    return redirect('event_create')
+    return redirect('add_events:event_create')
 
 
 class EventListView(ListView):
@@ -30,9 +31,16 @@ class EventCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = Event
     form_class = EventForm
     template_name = 'events/event_create.html'
-    success_url = reverse_lazy('event_list')
+
+    def get_success_url(self):
+        from django.urls import reverse
+        return reverse('add_events:event_detail_view', kwargs={'pk': self.object.pk})
 
     def form_valid(self, form):
+        if not self.request.user.is_pro_user():
+            messages.error(self.request, 'Только ProUser могут создавать мероприятия')
+            return redirect('add_events:event_list')
+
         response = super().form_valid(form)
         # Создаем запись организатора через модель EventOrganizer для создателя события
         EventOrganizer.objects.create(
@@ -57,33 +65,52 @@ class EventCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     def test_func(self):
         return self.request.user.is_pro_user()
 
-    def form_valid(self, form):
-        response = super().form_valid(form)
-        # Создаем запись организатора через модель EventOrganizer
-        EventOrganizer.objects.create(
-            user=self.request.user,
-            event=self.object,
-            added_by=self.request.user
-        )
-        return response
-
-    def test_func(self):
-        return self.request.user.is_pro_user()
-
 
 class EventUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Event
-    fields = ['title_event', 'description_Event',
-              'event_place', 'event_date',
-              'event_time', 'Event_photo',
-              'max_members']
+    form_class = EventForm
     template_name = 'events/event_update.html'
-    success_url = reverse_lazy('event_list')
     context_object_name = 'event'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        event = self.get_object()
+        # Гарантируем, что event всегда есть в контексте
+        context['event'] = event
+        # Форматируем дату и время для HTML-инпутов
+        context['event_date'] = event.event_date.strftime('%Y-%m-%d') if event.event_date else ''
+        context['event_time'] = event.event_time.strftime('%H:%M') if event.event_time else ''
+        return context
+
+    def get_success_url(self):
+        messages.success(self.request, 'Мероприятие успешно обновлено')
+        return reverse_lazy('add_events:event_detail_view', kwargs={'pk': self.object.pk})
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+
+        event = self.object
+        current_organizers = set(
+            event.event_organizer_records.exclude(user=self.request.user).values_list('user', flat=True))
+        new_organizers = set(form.cleaned_data.get('additional_organizers', []))
+
+        for organizer_id in current_organizers - new_organizers:
+            EventOrganizer.objects.filter(event=event, user_id=organizer_id).delete()
+
+        for organizer_id in new_organizers - current_organizers:
+            EventOrganizer.objects.create(
+                user_id=organizer_id,
+                event=event,
+                added_by=self.request.user
+            )
+        return response
 
     def test_func(self):
         event = self.get_object()
-        return event.is_user_organizer(self.request.user)
+        if not event.is_user_organizer(self.request.user):
+            messages.error(self.request, 'Только организаторы могут редактировать мероприятие')
+            return False
+        return True
 
 
 class EventParticipantsView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
@@ -129,7 +156,7 @@ def event_register(request, pk):
                 messages.success(request, 'Вы успешно зарегистрировались на мероприятие')
             else:
                 messages.error(request, 'Достигнуто максимальное количество участников')
-        return redirect('event_detail', pk=pk)
+        return redirect('add_events:event_detail_view', pk=pk)
     return HttpResponseForbidden()
 
 
@@ -140,7 +167,7 @@ def event_unregister(request, pk):
         if event.is_user_registered(request.user):
             event.users_members.remove(request.user)
             messages.success(request, 'Регистрация отменена')
-        return redirect('event_detail', pk=pk)
+        return redirect('add_events:event_detail_view', pk=pk)
     return HttpResponseForbidden()
 
 
@@ -151,7 +178,7 @@ def event_delete(request, pk):
         if event.is_user_organizer(request.user):
             event.delete()
             messages.success(request, 'Мероприятие успешно удалено')
-            return redirect('event_list')
+            return redirect('add_events:event_list')
         return HttpResponseForbidden('У вас нет прав для удаления этого мероприятия')
     return HttpResponseForbidden()
 
