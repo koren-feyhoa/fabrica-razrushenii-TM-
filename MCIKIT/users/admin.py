@@ -11,6 +11,8 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .models import User, EventOrganizer
 
+
+
 class CustomUserAdmin(UserAdmin):
     list_display = ('username', 'Name_User', 'Number_of_group', 'role', 'is_active')
     list_filter = ('role', 'is_active')
@@ -40,6 +42,10 @@ class EventOrganizerAdmin(admin.ModelAdmin):
     list_filter = ('date_added',)
     search_fields = ('user__Name_User', 'event__title_event', 'added_by__Name_User')
     raw_id_fields = ('user', 'event', 'added_by')
+class EventOrganizerInline(admin.TabularInline):
+    model = EventOrganizer
+    extra = 1
+
 
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(EventOrganizer, EventOrganizerAdmin)

@@ -1,3 +1,4 @@
+from django.apps import apps
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.core.exceptions import PermissionDenied
@@ -40,6 +41,7 @@ class User(AbstractUser):
         if not self.is_pro_user():
             self.make_pro_user()
         if not self.is_organizer_of_event(event):
+            EventOrganizer=apps.get_model('users', 'EventOrganizer') #izmenenie vozmozhno nuzhno ybrat
             EventOrganizer.objects.create(user=self, event=event, added_by=added_by)
 
     def get_organized_events(self):

@@ -1,0 +1,26 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+</head>
+<body>
+    <h1>{{ event.title_event }}</h1>
+    {% if event.Event_photo %}
+                <div class="text-center mb-4">
+                    <img src="{{ event.Event_photo.url }}" alt="{{ event.title_event }}" >
+                </div>
+            {% endif %}
+        <h5>Информация о мероприятии:</h5>
+    <ul class="list-unstyled">
+        <li>Дата: {{ event.event_date }}</li>
+        <li>Время: {{ event.event_time }}</li>
+        <li>Место: {{ event.event_place }}</li>
+    </ul>
+        <h5>Описание:</h5>
+    <p>{{ event.description_Event }}</p>
+
+</body>
+</html>

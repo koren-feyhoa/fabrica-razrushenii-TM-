@@ -71,7 +71,7 @@ class EventParticipantsView(LoginRequiredMixin, UserPassesTestMixin, DetailView)
 
 class EventDetailView(DetailView):
     model = Event
-    template_name = 'events/event_detail.html'
+    template_name = 'events/event_detail_view.html'
     context_object_name = 'event'
 
     def get_context_data(self, **kwargs):
