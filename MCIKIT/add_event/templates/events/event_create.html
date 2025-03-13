@@ -97,7 +97,7 @@
 
         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
             <a href="{% url 'event_list' %}" class="btn btn-secondary me-md-2">Отмена</a>
-            <button type="submit" class="btn btn-primary">Создать мероприятие</button>
+            <button type="submit" class="btn btn-primary" href="{% url 'add_events:event_detail_view' %}">Создать мероприятие</button>
         </div>
     </form>
 </div>
