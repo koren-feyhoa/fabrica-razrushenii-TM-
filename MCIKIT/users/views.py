@@ -64,7 +64,7 @@ def rate_event(request, event_id):
 
     event = get_object_or_404(Event, id=event_id)
     current_datetime = timezone.now()
-    event_datetime = timezone.datetime.combine(event.event_date, event.event_time)
+    event_datetime = timezone.make_aware(timezone.datetime.combine(event.event_date, event.event_time))
 
     if event_datetime > current_datetime:
         return JsonResponse({'error': 'Cannot rate future events'}, status=400)

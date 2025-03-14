@@ -1,5 +1,3 @@
-{% load static %}
-
 {% block content %}
 <div class="container mt-4">
     <h2>Профиль пользователя</h2>
@@ -25,9 +23,15 @@
         </div>
     </div>
 
+    {% if user.is_pro_user or user.is_super_user %}
+    <!-- Кнопки переключения -->
+    <div class="mb-4">
+        <button class="btn btn-primary me-2" onclick="showEvents('attended')" id="attendedBtn">Посещенные мероприятия</button>
+        <button class="btn btn-outline-primary" onclick="showEvents('organized')" id="organizedBtn">Организованные мероприятия</button>
+    </div>
+
     <!-- Посещенные мероприятия -->
-    <div class="mt-4">
-        <h3>Посещенные мероприятия</h3>
+    <div id="attendedEvents" class="events-section">
         <div class="row g-4">
             {% for event_data in attended_events %}
                 <div class="col-md-3">
@@ -47,7 +51,7 @@
                             {% if event_data.is_past %}
                                 {% if event_data.rating %}
                                     <div class="rating-display">
-                                        <p class="mb-1"><strong>Ваша оценка:</strong></p>
+                                        <p class="mb-1"><strong>Ваша оценка: {{ event_data.rating.rating }}</strong></p>
                                         <div class="stars">
                                             {% for i in "12345" %}
                                                 <span class="star {% if i|add:"0" <= event_data.rating.rating %}active{% endif %}">★</span>
@@ -70,32 +74,30 @@
         </div>
     </div>
 
-    <!-- Организованные мероприятия (только для ProUser и SuperUser) -->
-    {% if user.is_pro_user or user.is_super_user %}
-        <div class="mt-4">
-            <h3>Организованные мероприятия</h3>
-            <div class="row g-4">
-                {% for event in organized_events %}
-                    <div class="col-md-3">
-                        <div class="card h-100">
-                            <div class="event-img-container">
-                                {% if event.Event_photo %}
-                                    <img src="{{ event.Event_photo.url }}" class="card-img-top" alt="{{ event.title_event }}">
-                                {% endif %}
-                            </div>
-                            <div class="card-body">
-                                <h6 class="card-title">{{ event.title_event }}</h6>
-                                <p class="card-text small">
-                                    <strong>Дата:</strong> {{ event.event_date }}<br>
-                                    <strong>Время:</strong> {{ event.event_time }}<br>
-                                    <strong>Средняя оценка:</strong> {{ event.average_rate|floatformat:1 }}
-                                </p>
-                            </div>
+    <!-- Организованные мероприятия -->
+    <div id="organizedEvents" class="events-section" style="display: none;">
+        <div class="row g-4">
+            {% for event in organized_events %}
+                <div class="col-md-3">
+                    <div class="card h-100">
+                        <div class="event-img-container">
+                            {% if event.Event_photo %}
+                                <img src="{{ event.Event_photo.url }}" class="card-img-top" alt="{{ event.title_event }}">
+                            {% endif %}
+                        </div>
+                        <div class="card-body">
+                            <h6 class="card-title">{{ event.title_event }}</h6>
+                            <p class="card-text small">
+                                <strong>Дата:</strong> {{ event.event_date }}<br>
+                                <strong>Время:</strong> {{ event.event_time }}<br>
+                                <strong>Средняя оценка:</strong> {{ event.average_rate|floatformat:1 }}
+                            </p>
                         </div>
                     </div>
-                {% endfor %}
-            </div>
+                </div>
+            {% endfor %}
         </div>
+    </div>
     {% endif %}
 
     <!-- Модальное окно для оценки -->
@@ -138,8 +140,6 @@
     </div>
 </div>
 
-{% endblock %}
-
 {% block extra_css %}
 <style>
     .event-img-container {
@@ -169,21 +169,14 @@
         object-fit: cover;
     }
 
-    .rating, .rating-large {
+    .rating-large {
         display: flex;
         flex-direction: row-reverse;
         justify-content: center;
     }
 
-    .rating input, .rating-large input {
+    .rating-large input {
         display: none;
-    }
-
-    .rating label {
-        cursor: pointer;
-        font-size: 24px;
-        color: #ddd;
-        padding: 2px;
     }
 
     .rating-large label {
@@ -193,9 +186,6 @@
         padding: 5px;
     }
 
-    .rating label:hover,
-    .rating label:hover ~ label,
-    .rating input:checked ~ label,
     .rating-large label:hover,
     .rating-large label:hover ~ label,
     .rating-large input:checked ~ label {
@@ -203,43 +193,56 @@
     }
 
     .stars {
+        display: inline-block;
+    }
+
+    .star {
         color: #ddd;
-        font-size: 18px;
+        font-size: 20px;
     }
 
-    .stars .star.active {
+    .star.active {
         color: #ffd700;
-    }
-
-    .card {
-        transition: transform 0.2s;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-
-    .card:hover {
-        transform: translateY(-5px);
-    }
-
-    .modal-content {
-        border-radius: 15px;
-    }
-
-    .modal-dialog {
-        max-width: 500px;
     }
 </style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+function showEvents(type) {
+    // Скрываем все секции
+    document.querySelectorAll('.events-section').forEach(section => {
+        section.style.display = 'none';
+    });
+
+    // Сбрасываем стили всех кнопок
+    document.getElementById('attendedBtn').classList.remove('btn-primary');
+    document.getElementById('attendedBtn').classList.add('btn-outline-primary');
+    document.getElementById('organizedBtn').classList.remove('btn-primary');
+    document.getElementById('organizedBtn').classList.add('btn-outline-primary');
+
+    // Показываем выбранную секцию и активируем соответствующую кнопку
+    if (type === 'attended') {
+        document.getElementById('attendedEvents').style.display = 'block';
+        document.getElementById('attendedBtn').classList.remove('btn-outline-primary');
+        document.getElementById('attendedBtn').classList.add('btn-primary');
+    } else {
+        document.getElementById('organizedEvents').style.display = 'block';
+        document.getElementById('organizedBtn').classList.remove('btn-outline-primary');
+        document.getElementById('organizedBtn').classList.add('btn-primary');
+    }
+}
+
+// При загрузке страницы показываем посещенные мероприятия
 document.addEventListener('DOMContentLoaded', function() {
+    showEvents('attended');
+
     let currentEventId = null;
 
     // Открытие модального окна
     document.querySelectorAll('.rate-event-btn').forEach(button => {
         button.addEventListener('click', function() {
             currentEventId = this.dataset.eventId;
-            // Сброс формы при открытии
             document.getElementById('ratingForm').reset();
         });
     });
@@ -282,7 +285,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Функция для получения CSRF токена
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -299,4 +301,5 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+{% endblock %}
 {% endblock %}
