@@ -58,10 +58,17 @@
                         </div>
                     {% else %}
                         {% if event.max_members == 0 or registered_count < event.max_members %}
-                            <form action="{% url 'add_events:event_register' event.pk %}" method="post">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-success">Зарегистрироваться</button>
-                            </form>
+                            {% if questions %}
+                                    <form method="post" action="{% url 'answer_questions' event.id %}">
+                                        {% csrf_token %}
+                                        <button type="submit">Зарегистрироваться</button>
+                                    </form>
+                            {% else %}
+                                    <form action="{% url 'add_events:event_register' event.pk %}" method="post">
+                                            {% csrf_token %}
+                                        <button type="submit" class="btn btn-success">Зарегистрироваться</button>
+                                    </form>
+                            {% endif %}
                         {% else %}
                             <div class="alert alert-warning">
                                 Достигнуто максимальное количество участников

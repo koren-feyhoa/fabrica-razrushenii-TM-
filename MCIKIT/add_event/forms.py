@@ -1,5 +1,7 @@
 from django import forms
-from .models import Event
+from django.forms import inlineformset_factory
+
+from .models import Event, Question, AnswerOption
 from django.contrib.auth import get_user_model
 from django.utils.dateparse import parse_date, parse_time
 
@@ -54,7 +56,18 @@ class EventForm(forms.ModelForm):
             'Event_photo': forms.FileInput(attrs={'class': 'form-control'}),
             'max_members': forms.NumberInput(attrs={'class': 'form-control', 'min': '0'}),
         }
+QuestionFormSet = inlineformset_factory(Event, Question, fields=('text',), extra=1, can_delete=True)
+AnswerOptionFormSet = inlineformset_factory(Question, AnswerOption, fields=('text',), extra=2, can_delete=True)
 
 
+class QuestionForm(forms.ModelForm):
+    class Meta:
+        model = Question
+        fields = ['text']
+
+class AnswerOptionForm(forms.ModelForm):
+    class Meta:
+        model = AnswerOption
+        fields = ['text']
 
 

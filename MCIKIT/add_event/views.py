@@ -1,4 +1,5 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.forms import inlineformset_factory
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DetailView, UpdateView, ListView
@@ -6,8 +7,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import HttpResponseForbidden
 
-from .forms import EventForm
-from .models import Event
+from .forms import EventForm, AnswerOptionForm, QuestionForm
+from .models import Event, AnswerOption, UserAnswer, Question
 from users.models import EventOrganizer, User
 
 from django.http import JsonResponse
@@ -42,6 +43,7 @@ class EventCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
             return redirect('add_events:event_list')
 
         response = super().form_valid(form)
+        event = self.object
         # Создаем запись организатора через модель EventOrganizer для создателя события
         EventOrganizer.objects.create(
             user=self.request.user,
@@ -58,6 +60,20 @@ class EventCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
                     event=self.object,
                     added_by=self.request.user
                 )
+        question_formset = inlineformset_factory(Event, Question, fields=('text',), extra=1, can_delete=True)(
+            self.request.POST, instance=event, prefix='questions')
+
+        if question_formset.is_valid():
+            questions = question_formset.save(commit=False)
+            for question in questions:
+                if question.text:
+                    question.event = event
+                    question.save()
+                    answer_formset = inlineformset_factory(Question, AnswerOption, fields=('text',), extra=2,
+                                                           can_delete=True)(self.request.POST, instance=question,
+                                                                            prefix=f'answers-{question.id}')
+                    if answer_formset.is_valid():
+                        answer_formset.save()
 
         messages.success(self.request, 'Мероприятие успешно создано')
         return response
@@ -103,6 +119,20 @@ class EventUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
                 event=event,
                 added_by=self.request.user
             )
+        question_formset = inlineformset_factory(Event, Question, fields=('text',), extra=1, can_delete=True)(
+            self.request.POST, instance=event, prefix='questions')
+
+        if question_formset.is_valid():
+            questions = question_formset.save(commit=False)
+            for question in questions:
+                if question.text:
+                    question.event = event
+                    question.save()
+                    answer_formset = inlineformset_factory(Question, AnswerOption, fields=('text',), extra=2,
+                                                       can_delete=True)(self.request.POST, instance=question,
+                                                                                prefix=f'answers-{question.id}')
+                    if answer_formset.is_valid():
+                        answer_formset.save()
         return response
 
     def test_func(self):
@@ -186,3 +216,58 @@ def get_pro_users(request):
     """Возвращает список ProUser в формате JSON"""
     pro_users = User.objects.filter(role__in=['pro_user', 'super_user']).values('id', 'Name_User')
     return JsonResponse(list(pro_users), safe=False)
+
+
+@login_required
+def answer_questions(request, event_id):
+    event = get_object_or_404(Event, pk=event_id)
+    questions = event.questions.all()
+    user = request.user
+
+    if request.method == 'POST':
+        if questions:  # Проверяем, есть ли вопросы
+            all_questions_answered = True
+            for question in questions:
+                answer_id = request.POST.get(f'question_{question.id}')
+                if answer_id:
+                    answer = get_object_or_404(AnswerOption, pk=answer_id)
+                    UserAnswer.objects.update_or_create(
+                        user=user,
+                        question=question,
+                        defaults={'answer': answer}
+                    )
+                else:
+                    all_questions_answered = False
+
+            if all_questions_answered:
+                event.users_members.add(user)
+                return redirect('event_detail', pk=event_id)
+            else:
+                error_message = "Пожалуйста, ответьте на все вопросы."
+                return render(request, 'answer_questions.html', {'event': event, 'questions': questions, 'error_message': error_message})
+        else:  # Если вопросов нет, просто добавляем пользователя в участники
+            event.users_members.add(user)
+            return redirect('event_detail', pk=event_id)
+
+    return render(request, 'answer_questions.html', {'event': event, 'questions': questions})
+
+@login_required
+def add_question(request, event_id):
+    event = get_object_or_404(Event, pk=event_id)
+    AnswerOptionFormSet = inlineformset_factory(Question, AnswerOption, form=AnswerOptionForm, extra=3)
+
+    if request.method == 'POST':
+        question_form = QuestionForm(request.POST)
+        formset = AnswerOptionFormSet(request.POST)
+        if question_form.is_valid() and formset.is_valid():
+            question = question_form.save(commit=False)
+            question.event = event
+            question.save()
+            formset.instance = question
+            formset.save()
+            return redirect('event_detail_view', pk=event_id)  # Замените 'event_detail' на URL вашего представления деталей события
+    else:
+        question_form = QuestionForm()
+        formset = AnswerOptionFormSet()
+
+    return render(request, 'events/add_question.html', {'question_form': question_form, 'formset': formset, 'event': event})

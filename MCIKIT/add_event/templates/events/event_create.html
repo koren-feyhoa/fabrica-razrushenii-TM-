@@ -9,7 +9,6 @@
 
         <div class="card mb-4">
             <div class="card-body">
-                <!-- Основные поля -->
                 <div class="mb-3">
                     <label for="{{ form.title_event.id_for_label }}" class="form-label">Название мероприятия</label>
                     {{ form.title_event }}
@@ -38,7 +37,7 @@
                     </div>
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label for="{{ form.event_time.id_for_label }}" class="form-label">Время начала</label>
+                            <label for="{{ form.event_time.id_for_label }}" class-label">Время начала</label>
                             {{ form.event_time }}
                             {% if form.event_time.errors %}
                                 <div class="invalid-feedback">{{ form.event_time.errors }}</div>
@@ -63,12 +62,10 @@
                     {% endif %}
                 </div>
 
-                <!-- Кнопка для дополнительных настроек -->
                 <button class="btn btn-outline-primary w-100 mb-3" type="button" onclick="toggleSettings()">
                     Дополнительные настройки
                 </button>
 
-                <!-- Выпадающая секция с дополнительными настройками -->
                 <div id="additionalSettings" style="display: none;">
                     <div class="card card-body">
                         <div class="mb-3">
@@ -87,11 +84,33 @@
                             <button type="button" class="btn btn-outline-primary btn-sm" onclick="openOrganizersModal()">
                                 Управление организаторами
                             </button>
-                            <!-- Скрытое поле для хранения выбранных организаторов -->
                             {{ form.additional_organizers }}
                         </div>
                     </div>
                 </div>
+
+                <div id="question-form-list">
+                    {{ question_formset.management_form }}
+                    {% for question_form in question_formset %}
+                        {{ question_form.as_p }}
+                        <div class="answer-form-list">
+                            {{ answer_formsets.management_form }}
+                            {% for answer_form in answer_formsets %}
+                                {{ answer_form.as_p }}
+                                <button type="button" class="remove-answer-btn">Удалить вариант ответа</button>
+                            {% endfor %}
+                        </div>
+                        <button type="button" class="add-answer-btn">Добавить вариант ответа</button>
+                    {% endfor %}
+                </div>
+                <button type="button" id="add-question-btn">Добавить вопрос</button>
+                <template id="question-form-template">
+                    {{ question_formset.empty_form.as_p }}
+                </template>
+                <template id="answer-form-template">
+                    {{ answer_formsets.empty_form.as_p }}
+                </template>
+
             </div>
         </div>
 
@@ -100,85 +119,136 @@
             <button type="submit" class="btn btn-primary">Создать мероприятие</button>
         </div>
     </form>
-</div>
 
-<!-- Модальное окно для управления организаторами -->
-<div id="organizersModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h5>Управление организаторами</h5>
-            <span class="close" onclick="closeOrganizersModal()">&times;</span>
-        </div>
-        <div class="modal-body">
-            <div class="current-organizers mb-3">
-                <h6>Текущие организаторы:</h6>
-                <ul id="organizersList" class="list-group">
-                    <!-- Список будет заполнен через JavaScript -->
-                </ul>
+    <div id="organizersModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5>Управление организаторами</h5>
+                <span class="close" onclick="closeOrganizersModal()">&times;</span>
             </div>
-            <div class="add-organizer">
-                <h6>Добавить организатора:</h6>
-                <button type="button" class="btn btn-outline-success btn-sm" onclick="toggleProUsersList()">
-                    + Добавить ProUser
-                </button>
-                <div id="proUsersList" style="display: none;" class="mt-2">
-                    <!-- Список будет заполнен через JavaScript -->
+            <div class="modal-body">
+                <div class="current-organizers mb-3">
+                    <h6>Текущие организаторы:</h6>
+                    <ul id="organizersList" class="list-group">
+                        </ul>
+                </div>
+                <div class="add-organizer">
+                    <h6>Добавить организатора:</h6>
+                    <button type="button" class="btn btn-outline-success btn-sm" onclick="toggleProUsersList()">
+                        + Добавить ProUser
+                    </button>
+                    <div id="proUsersList" style="display: none;" class="mt-2">
+                        </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<style>
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.5);
-}
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
 
-.modal-content {
-    background-color: #fefefe;
-    margin: 15% auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%;
-    max-width: 500px;
-    border-radius: 5px;
-}
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 5px;
+        }
 
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-}
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
 
-.close {
-    color: #aaa;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-}
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
 
-.close:hover {
-    color: black;
-}
+        .close:hover {
+            color: black;
+        }
 
-.list-group-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-</style>
+        .list-group-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
 {% endblock %}
-
 {% block extra_js %}
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Добавление вопросов
+        const addQuestionButton = document.getElementById('add-question-btn');
+        const questionFormList = document.getElementById('question-form-list');
+        const questionTemplate = document.getElementById('question-form-template').content.cloneNode(true);
+        let questionFormNum = questionFormList.querySelectorAll('div').length - 1; // Учитываем management_form
+
+        addQuestionButton.addEventListener('click', function() {
+            const newQuestionForm = questionTemplate.cloneNode(true);
+            newQuestionForm.querySelectorAll('input, select, textarea').forEach(el => {
+                el.name = el.name.replace('__prefix__', questionFormNum);
+                el.id = el.id.replace('__prefix__', questionFormNum);
+            });
+            questionFormList.appendChild(newQuestionForm);
+            questionFormNum++;
+            updateQuestionFormCount();
+        });
+
+        function updateQuestionFormCount() {
+            const totalForms = document.getElementById('id_questions-TOTAL_FORMS');
+            totalForms.value = questionFormNum;
+        }
+
+        // Добавление вариантов ответов
+        const addAnswerButtons = document.querySelectorAll('.add-answer-btn');
+        const removeAnswerButtons = document.querySelectorAll('.remove-answer-btn');
+        const template = document.getElementById('answer-form-template').content.cloneNode(true);
+
+        addAnswerButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const answerFormList = this.previousElementSibling;
+                let formNum = answerFormList.querySelectorAll('div').length - 1; // Учитываем management_form
+                const newForm = template.cloneNode(true);
+                newForm.querySelectorAll('input, select, textarea').forEach(el => {
+                    el.name = el.name.replace('__prefix__', formNum);
+                    el.id = el.id.replace('__prefix__', formNum);
+                });
+                answerFormList.appendChild(newForm);
+                formNum++;
+                updateAnswerFormCount(answerFormList, formNum);
+            });
+        });
+
+        removeAnswerButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                this.parentElement.remove();
+                updateAnswerFormCount(this.parentElement.parentElement, this.parentElement.parentElement.querySelectorAll('div').length - 1);
+            });
+        });
+
+        function updateAnswerFormCount(answerFormList, formNum) {
+            const totalForms = answerFormList.querySelector('input[name$="-TOTAL_FORMS"]');
+            totalForms.value = formNum;
+        }
+
+});
     // Функция для переключения видимости дополнительных настроек
     function toggleSettings() {
         var settings = document.getElementById('additionalSettings');

@@ -26,4 +26,5 @@ urlpatterns = [
     path('<int:pk>/unregister/', event_unregister, name='event_unregister'),
     path('<int:pk>/delete/', event_delete, name='event_delete'),
     path('get-pro-users/', get_pro_users, name='get_pro_users'),
+    path('<int:event_id>/add_question/', views.add_question, name='add_question')#потом когда сделаешь всплывающее окно убрать
 ]
