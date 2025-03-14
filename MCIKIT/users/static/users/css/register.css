@@ -1,0 +1,95 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #1B2D34;
+}
+
+.container-signup {
+  display: flex;
+  width: 800px;
+  height: 500px;
+  background: #385966;
+  border-radius: 20px;
+  overflow: hidden;
+  position: relative;
+}
+
+.welcome-section {
+  border-radius: 20px;
+  margin-top: 1.5%;
+  margin-left: 1.5%;
+  width: 50%;
+  height: 95%;
+  background: #1E333C;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 0 40px;
+}
+
+.welcome-section .welcome {
+  font-size: 36px;
+  margin-bottom: 20px;
+  color: #02DAEE;
+}
+
+.welcome-section p{
+  font-size: 18px;
+  color: white;
+}
+
+.forms-container {
+  position: relative;
+  width: 50%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.form-container{
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.form-container h2{
+  margin-bottom: 0;
+  text-align: center;
+  color: white;
+}
+
+.form-container input {
+  width: 100%;
+  padding: 3px;
+  margin: 10px 0;
+  border: none;
+  background-color: #385966;
+  border-bottom: 1px solid white;
+}
+
+.form-input::placeholder{
+  color: #C9C9C9;
+}
+
+.icons-login{
+  color: white;
+  width: 24px;
+  display: flex;
+  flex-direction: column;
+}
