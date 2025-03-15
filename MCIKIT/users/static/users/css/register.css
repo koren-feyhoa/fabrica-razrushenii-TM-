@@ -1,11 +1,12 @@
-* {
+*{
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-body {
+body{
   display: flex;
+  flex-direction: row;
   justify-content: center;
   align-items: center;
   height: 100vh;
@@ -13,17 +14,17 @@ body {
   background-color: #1B2D34;
 }
 
-.container-signup {
+.container-signup{
   display: flex;
-  width: 800px;
-  height: 500px;
+  width: 1140px;
+  height: 550px;
   background: #385966;
   border-radius: 20px;
   overflow: hidden;
   position: relative;
 }
 
-.welcome-section {
+.welcome-section{
   border-radius: 20px;
   margin-top: 1.5%;
   margin-left: 1.5%;
@@ -38,7 +39,7 @@ body {
   padding: 0 40px;
 }
 
-.welcome-section .welcome {
+.welcome-section .welcome{
   font-size: 36px;
   margin-bottom: 20px;
   color: #02DAEE;
@@ -49,7 +50,7 @@ body {
   color: white;
 }
 
-.forms-container {
+.forms-container{
   position: relative;
   width: 50%;
   height: 100%;
@@ -60,7 +61,7 @@ body {
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
+  width: 90%;
   height: 100%;
   padding: 40px;
   display: flex;
@@ -74,9 +75,9 @@ body {
   color: white;
 }
 
-.form-container input {
+.form-container input{
   width: 100%;
-  padding: 3px;
+  padding: 0px;
   margin: 10px 0;
   border: none;
   background-color: #385966;
@@ -87,9 +88,52 @@ body {
   color: #C9C9C9;
 }
 
+.sign-button{
+  width: 100%;
+  height: 50px;
+  border-radius: 20px;
+  text-align: center;
+  border: none;
+  background-color: #47939A;
+  color: white;
+  text-transform: uppercase;
+  font-weight: bold;
+  justify-content: center;
+}
+
+.sign-button:hover{
+  background-color: #017D88;
+  color: #1E333C;
+}
+
 .icons-login{
   color: white;
-  width: 24px;
+  width: 70%;
   display: flex;
   flex-direction: column;
+  justify-content: center;
+}
+
+.personaldata a{
+  text-align: center;
+  color: #02DAEE;
+}
+
+p{
+  color: white;
+  text-align: center;
+  align-items: center;
+}
+
+.start-page a{
+  color: white;
+}
+
+.personaldata a:hover{
+  border-bottom: outset;
+}
+
+.start-page svg{
+  position: absolute;
+  align-items: right;
 }
