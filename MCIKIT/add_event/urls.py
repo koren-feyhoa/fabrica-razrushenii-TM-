@@ -5,6 +5,7 @@ from .views import (
     EventDetailView,
     EventCreateView,
     EventUpdateView,
+    EventReviewsView,
     EventParticipantsView,
     event_register,
     event_unregister,
@@ -25,5 +26,8 @@ urlpatterns = [
     path('<int:pk>/register/', event_register, name='event_register'),
     path('<int:pk>/unregister/', event_unregister, name='event_unregister'),
     path('<int:pk>/delete/', event_delete, name='event_delete'),
+path('<int:pk>/toggle-registration/', views.toggle_registration, name='toggle_registration'),
     path('get-pro-users/', get_pro_users, name='get_pro_users'),
+    path('<int:event_id>/add_question/', views.add_question, name='add_question'),  #потом когда сделаешь всплывающее окно убрать
+    path('<int:pk>/reviews/', EventReviewsView.as_view(), name='event_reviews'),
 ]

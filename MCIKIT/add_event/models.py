@@ -15,6 +15,7 @@ class Event(models.Model):
     Event_photo = models.ImageField(upload_to=None, height_field=None, width_field=None)
     max_members = models.PositiveIntegerField(blank=True, verbose_name="Максимальное количество участников", default=0)
     users_members = ManyToManyField(settings.AUTH_USER_MODEL, related_name='event_members', blank=True)
+    registration_closed = models.BooleanField(default=False, verbose_name="Регистрация закрыта")
     organizers = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         through='users.EventOrganizer',
@@ -70,6 +71,7 @@ class Event(models.Model):
         verbose_name = 'Мероприятие'
 
 
+
 class EventRating(models.Model):
     RATE_CHOICES = (
         (1, '1'),
@@ -81,10 +83,39 @@ class EventRating(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='event_ratings')
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='ratings')
     rating = models.PositiveSmallIntegerField(choices=RATE_CHOICES)
+    likes = models.TextField(verbose_name="Что вам понравилось", blank=True, null=True)
+    dislikes = models.TextField(verbose_name="Что вам не понравилось", blank=True, null=True)
     timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'event')
+
+    def __str__(self):
+        return f"{self.user.Name_User} rated {self.event.title_event} with {self.rating}"
+
 
     class Meta:
         unique_together = ('user', 'event')  # Один пользователь может оставить только одну оценку для мероприятия
 
     def __str__(self):
         return f"{self.user.Name_User} rated {self.event.title_event} with {self.rating}"
+
+class Question(models.Model):
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='questions')
+    text = models.TextField(verbose_name="Текст вопроса")
+
+    def __str__(self):
+        return self.text
+class AnswerOption(models.Model):
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='answer_options')
+    text = models.CharField(max_length=255, verbose_name="Текст ответа")
+
+    def __str__(self):
+        return self.text
+class UserAnswer(models.Model):
+    user = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='answers')
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+    answer = models.ForeignKey(AnswerOption, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('user', 'question')

@@ -1,6 +1,8 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
+from django.utils import timezone
 from django.views.generic import CreateView, UpdateView
 from rest_framework.reverse import reverse_lazy
 
@@ -8,6 +10,8 @@ from .forms import LoginUserForm, RegisterUserForm, UserSettingsForm
 from .models import User
 from django.core.exceptions import PermissionDenied
 from django.contrib import messages
+
+from add_event.models import EventRating, Event
 
 
 class LoginUser(LoginView):
@@ -22,10 +26,72 @@ class RegisterUser(CreateView):
     extra_context = {'title': "Регистрация"}
     success_url = reverse_lazy('users:login')
 
+
 @login_required
 def profile(request):
-    user = request
-    return render(request, 'users/user_profile.html')
+    user = request.user
+    current_datetime = timezone.now()
+
+    attended_events = Event.objects.filter(users_members=user).order_by('-event_date')
+    attended_events_data = []
+
+    for event in attended_events:
+        event_data = {
+            'event': event,
+            'is_past': event.event_date < current_datetime.date() or (
+                    event.event_date == current_datetime.date() and
+                    event.event_time < current_datetime.time()
+            ),
+            'rating': EventRating.objects.filter(event=event, user=user).first()
+        }
+        attended_events_data.append(event_data)
+
+    context = {
+        'attended_events': attended_events_data,
+    }
+
+    if user.is_pro_user() or user.is_super_user():
+        organized_events = Event.objects.filter(organizers=user).order_by('-event_date')
+        context['organized_events'] = organized_events
+
+    return render(request, 'users/user_profile.html', context)
+
+
+@login_required
+def rate_event(request, event_id):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+    event = get_object_or_404(Event, id=event_id)
+    current_datetime = timezone.now()
+    event_datetime = timezone.make_aware(timezone.datetime.combine(event.event_date, event.event_time))
+
+    if event_datetime > current_datetime:
+        return JsonResponse({'error': 'Cannot rate future events'}, status=400)
+
+    rating = request.POST.get('rating')
+    likes = request.POST.get('likes', '')
+    dislikes = request.POST.get('dislikes', '')
+
+    if not rating or not rating.isdigit() or int(rating) not in range(1, 6):
+        return JsonResponse({'error': 'Invalid rating value'}, status=400)
+
+    event_rating, created = EventRating.objects.update_or_create(
+        user=request.user,
+        event=event,
+        defaults={
+            'rating': rating,
+            'likes': likes,
+            'dislikes': dislikes
+        }
+    )
+
+    return JsonResponse({
+        'success': True,
+        'rating': event_rating.rating,
+        'likes': event_rating.likes,
+        'dislikes': event_rating.dislikes
+    })
 
 
 def UserSettingsView(request):
