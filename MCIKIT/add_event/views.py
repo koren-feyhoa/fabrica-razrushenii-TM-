@@ -152,6 +152,18 @@ class EventParticipantsView(LoginRequiredMixin, UserPassesTestMixin, DetailView)
         event = self.get_object()
         return event.is_user_organizer(self.request.user)
 
+@login_required
+def toggle_registration(request, pk):
+    if request.method == 'POST':
+        event = get_object_or_404(Event, pk=pk)
+        if event.is_user_organizer(request.user):
+            event.registration_closed = not event.registration_closed
+            event.save()
+            messages.success(request, 'Регистрация успешно ' + ('закрыта' if event.registration_closed else 'возобновлена'))
+        else:
+            messages.error(request, 'Только организаторы могут управлять регистрацией')
+        return redirect('add_events:event_detail_view', pk=pk)
+    return HttpResponseForbidden()
 
 class EventDetailView(DetailView):
     model = Event
@@ -170,7 +182,8 @@ class EventDetailView(DetailView):
         context.update({
             'is_organizer': is_organizer,
             'is_registered': is_registered,
-            'registered_count': event.get_registered_count()
+            'registered_count': event.get_registered_count(),
+            'registration_closed': event.registration_closed
         })
 
         return context

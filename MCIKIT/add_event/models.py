@@ -15,6 +15,7 @@ class Event(models.Model):
     Event_photo = models.ImageField(upload_to=None, height_field=None, width_field=None)
     max_members = models.PositiveIntegerField(blank=True, verbose_name="Максимальное количество участников", default=0)
     users_members = ManyToManyField(settings.AUTH_USER_MODEL, related_name='event_members', blank=True)
+    registration_closed = models.BooleanField(default=False, verbose_name="Регистрация закрыта")
     organizers = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         through='users.EventOrganizer',
