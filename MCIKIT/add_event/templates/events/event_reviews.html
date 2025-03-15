@@ -1,0 +1,57 @@
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>{{ event.title_event }} - Отзывы</h2>
+    
+    <div class="reviews-container">
+        {% if reviews %}
+            {% for review in reviews %}
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-2">
+                            {% if review.user.avatar %}
+                                <img src="{{ review.user.avatar.url }}" alt="Avatar" class="rounded-circle me-2" style="width: 50px; height: 50px; object-fit: cover;">
+                            {% else %}
+                                <div class="rounded-circle bg-secondary me-2" style="width: 50px; height: 50px;"></div>
+                            {% endif %}
+                            <div>
+                                <h5 class="card-title mb-0">{{ review.user.Name_User }}</h5>
+                                {% if review.user.vk_id %}
+                                    <small class="text-muted">VK ID: {{ review.user.vk_id }}</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="rating mb-2">
+                            <strong>Оценка: {{ review.rating }}/5</strong>
+                        </div>
+                        
+                        {% if review.likes %}
+                            <div class="mb-2">
+                                <h6>Что понравилось:</h6>
+                                <p class="card-text">{{ review.likes }}</p>
+                            </div>
+                        {% endif %}
+                        
+                        {% if review.dislikes %}
+                            <div class="mb-2">
+                                <h6>Что не понравилось:</h6>
+                                <p class="card-text">{{ review.dislikes }}</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="alert alert-info">
+                Пока нет отзывов для этого мероприятия.
+            </div>
+        {% endif %}
+    </div>
+    
+    <a href="{% url 'users:user_profile' %}" class="btn btn-secondary mt-3">
+        Выход
+    </a>
+</div>
+{% endblock %}

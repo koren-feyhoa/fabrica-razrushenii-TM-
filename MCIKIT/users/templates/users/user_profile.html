@@ -91,6 +91,7 @@
                                 <strong>Дата:</strong> {{ event.event_date }}<br>
                                 <strong>Время:</strong> {{ event.event_time }}<br>
                                 <strong>Средняя оценка:</strong> {{ event.average_rate|floatformat:1 }}
+                                <a href="{% url 'add_events:event_reviews' event.pk %}" class="btn btn-primary">Отзывы</a>
                             </p>
                         </div>
                     </div>

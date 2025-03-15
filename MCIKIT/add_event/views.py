@@ -271,3 +271,16 @@ def add_question(request, event_id):
         formset = AnswerOptionFormSet()
 
     return render(request, 'events/add_question.html', {'question_form': question_form, 'formset': formset, 'event': event})
+
+class EventReviewsView(DetailView):
+    model = Event
+    template_name = 'events/event_reviews.html'
+    context_object_name = 'event'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        event = self.get_object()
+        # Get all ratings for this event with related user information
+        reviews = event.ratings.select_related('user').order_by('-timestamp')
+        context['reviews'] = reviews
+        return context
