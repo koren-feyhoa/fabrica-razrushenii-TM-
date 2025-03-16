@@ -26,6 +26,8 @@ class RegisterUser(CreateView):
     extra_context = {'title': "Регистрация"}
     success_url = reverse_lazy('users:login')
 
+def personal(request):
+    return render(request,'users/personal.html')
 
 @login_required
 def profile(request):

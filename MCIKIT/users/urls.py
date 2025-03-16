@@ -3,7 +3,7 @@
 from django.contrib.auth.views import LogoutView, PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView, reverse_lazy
 from django.urls import path
 from . import views
-from .views import RegisterUser, profile, UserSettingsView, rate_event
+from .views import RegisterUser, profile, UserSettingsView, rate_event, personal
 
 app_name="users"
 
@@ -12,6 +12,7 @@ urlpatterns=[
     path('login/',views.LoginUser.as_view(), name='login'),
     path('logout/', LogoutView.as_view(), name='logout'),
     path('register/', RegisterUser.as_view(), name='register'),
+    path('register/personal/', personal, name='personal'),
     path('password-reset/',
          PasswordResetView.as_view(
              template_name="users/password_reset_form.html",
@@ -32,5 +33,6 @@ path('users/', views.user_list, name='user_list'),
     path('make-pro-user/<int:user_id>/', views.make_pro_user, name='make_pro_user'),
 
  path('rate_event/<int:event_id>/', rate_event, name='rate_event'),
+
 
 ]
