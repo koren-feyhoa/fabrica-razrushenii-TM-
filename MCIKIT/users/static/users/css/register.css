@@ -80,8 +80,8 @@ body{
   padding: 0px;
   margin: 10px 0;
   border: none;
-  background-color: #385966;
   border-bottom: 1px solid white;
+  color: white;
 }
 
 .form-input::placeholder{
@@ -96,8 +96,9 @@ body{
   border: none;
   background-color: #47939A;
   color: white;
-  text-transform: uppercase;
   font-weight: bold;
+  margin-bottom: 15px;
+  text-transform: uppercase;
   justify-content: center;
 }
 
@@ -127,6 +128,8 @@ p{
 
 .start-page a{
   color: white;
+  display: flex;
+  justify-content: right;
 }
 
 .personaldata a:hover{
