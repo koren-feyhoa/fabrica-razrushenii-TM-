@@ -16,7 +16,7 @@ body{
 
 .container-signup{
   display: flex;
-  width: 1140px;
+  width: 980px;
   height: 550px;
   background: #385966;
   border-radius: 20px;
@@ -33,21 +33,19 @@ body{
   background: #1E333C;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
   text-align: center;
   padding: 0 40px;
+}
+
+.to-welcome{
+  width: 70%;
 }
 
 .welcome-section .welcome{
   font-size: 36px;
   margin-bottom: 20px;
   color: #02DAEE;
-}
-
-.welcome-section p{
-  font-size: 18px;
-  color: white;
 }
 
 .forms-container{
@@ -60,8 +58,7 @@ body{
 .form-container{
   position: absolute;
   top: 0;
-  left: 0;
-  width: 90%;
+  width: 100%;
   height: 100%;
   padding: 40px;
   display: flex;
@@ -80,6 +77,7 @@ body{
   padding: 0px;
   margin: 10px 0;
   border: none;
+  background-color: #385966;
   border-bottom: 1px solid white;
   color: white;
 }
@@ -115,12 +113,18 @@ body{
   justify-content: center;
 }
 
+.personaldata{
+  margin-top: 10px;
+}
+
 .personaldata a{
   text-align: center;
   color: #02DAEE;
 }
 
 p{
+  width: 100%;
+  font-size: 18px;
   color: white;
   text-align: center;
   align-items: center;
