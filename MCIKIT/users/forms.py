@@ -15,10 +15,11 @@ class LoginUserForm(AuthenticationForm):
         fields=['username', 'password']
 
 class RegisterUserForm(UserCreationForm):
-    username = forms.CharField(label="",widget=forms.TextInput(attrs={'class': 'form-input', 'placeholder':'Логин'}))
+
     password1 = forms.CharField(label="",widget=forms.TextInput(attrs={'class': 'form-input', 'placeholder':'Пароль'}))
     password2 = None
     first_name=None
+    username = forms.CharField(label="", widget=forms.TextInput(attrs={'class': 'form-input', 'placeholder':'Логин'}))
     last_name=None
     class Meta:
         model=get_user_model()
@@ -31,8 +32,8 @@ class RegisterUserForm(UserCreationForm):
             'username':'',
             'password1':'',
             }
-        widgets={
-            'Name_User': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'ФИО'}),
+        widgets = {
+            'Name_User': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'ФИО', 'autofocus': 'autofocus'}),
             'email': forms.TextInput(attrs={'class': 'form-input', 'placeholder':'E-mail'}),
             'Number_of_group': forms.TextInput(attrs={'class': 'form-input', 'placeholder':'Номер группы'}),
             'VK_id': forms.TextInput(attrs={'class': 'form-input', 'placeholder':'ВК ID'}),

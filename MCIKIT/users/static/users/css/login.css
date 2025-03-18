@@ -1,0 +1,139 @@
+*{
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body{
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #1B2D34;
+}
+
+.container-signup{
+  display: flex;
+  width: 980px;
+  height: 550px;
+  background: #385966;
+  border-radius: 20px;
+  overflow: hidden;
+  position: relative;
+}
+
+.welcome-section{
+  border-radius: 20px;
+  margin-top: 1.5%;
+  margin-left: 1.5%;
+  width: 50%;
+  height: 95%;
+  background: #1E333C;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0 40px;
+}
+
+.to-welcome{
+  width: 87%;
+  margin-top: 20px;
+}
+
+.welcome-section .welcome{
+  font-size: 36px;
+  margin-bottom: 20px;
+  color: #02DAEE;
+}
+
+.forms-container{
+  position: relative;
+  width: 50%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.form-container{
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.form-container h2{
+  margin-bottom: 50px;
+  text-align: center;
+  color: white;
+}
+
+.form-container input{
+  width: 100%;
+  padding: 0px;
+  margin: 10px 0;
+  border: none;
+  background-color: #385966;
+  border-bottom: 1px solid white;
+  color: white;
+}
+
+.form-input::placeholder{
+  color: #C9C9C9;
+}
+
+.sign-button{
+  width: 100%;
+  height: 50px;
+  border-radius: 20px;
+  text-align: center;
+  border: none;
+  background-color: #47939A;
+  color: white;
+  font-weight: bold;
+  margin-bottom: 15px;
+  text-transform: uppercase;
+  justify-content: center;
+}
+
+.sign-button:hover{
+  background-color: #017D88;
+  color: #1E333C;
+}
+
+.personaldata{
+  margin-top: 10px;
+}
+
+.personaldata a{
+  text-align: center;
+  color: #02DAEE;
+}
+
+p{
+  width: 100%;
+  font-size: 18px;
+  color: white;
+  text-align: center;
+  align-items: center;
+}
+
+.start-page a{
+  color: white;
+  display: flex;
+  justify-content: left;
+}
+
+.personaldata a:hover{
+  border-bottom: outset;
+}
+
+.start-page svg{
+  position: absolute;
+  margin-top: 7px;
+}
