@@ -86,32 +86,19 @@
                             </button>
                             {{ form.additional_organizers }}
                         </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Дополнительные вопросы</label>
+                            <button type="button" class="btn btn-outline-success btn-sm" onclick="addQuestion()">
+                                + Добавить вопрос
+                            </button>
+                            <div id="questionsContainer">
+                                </div>
+                        </div>
                     </div>
                 </div>
 
-                <div id="question-form-list">
-                    {{ question_formset.management_form }}
-                    {% for question_form in question_formset %}
-                        {{ question_form.as_p }}
-                        <div class="answer-form-list">
-                            {{ answer_formsets.management_form }}
-                            {% for answer_form in answer_formsets %}
-                                {{ answer_form.as_p }}
-                                <button type="button" class="remove-answer-btn">Удалить вариант ответа</button>
-                            {% endfor %}
-                        </div>
-                        <button type="button" class="add-answer-btn">Добавить вариант ответа</button>
-                    {% endfor %}
-                </div>
-                <button type="button" id="add-question-btn">Добавить вопрос</button>
-                <template id="question-form-template">
-                    {{ question_formset.empty_form.as_p }}
-                </template>
-                <template id="answer-form-template">
-                    {{ answer_formsets.empty_form.as_p }}
-                </template>
 
-            </div>
         </div>
 
         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
@@ -190,65 +177,11 @@
             align-items: center;
         }
     </style>
+
 {% endblock %}
 {% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Добавление вопросов
-        const addQuestionButton = document.getElementById('add-question-btn');
-        const questionFormList = document.getElementById('question-form-list');
-        const questionTemplate = document.getElementById('question-form-template').content.cloneNode(true);
-        let questionFormNum = questionFormList.querySelectorAll('div').length - 1; // Учитываем management_form
 
-        addQuestionButton.addEventListener('click', function() {
-            const newQuestionForm = questionTemplate.cloneNode(true);
-            newQuestionForm.querySelectorAll('input, select, textarea').forEach(el => {
-                el.name = el.name.replace('__prefix__', questionFormNum);
-                el.id = el.id.replace('__prefix__', questionFormNum);
-            });
-            questionFormList.appendChild(newQuestionForm);
-            questionFormNum++;
-            updateQuestionFormCount();
-        });
-
-        function updateQuestionFormCount() {
-            const totalForms = document.getElementById('id_questions-TOTAL_FORMS');
-            totalForms.value = questionFormNum;
-        }
-
-        // Добавление вариантов ответов
-        const addAnswerButtons = document.querySelectorAll('.add-answer-btn');
-        const removeAnswerButtons = document.querySelectorAll('.remove-answer-btn');
-        const template = document.getElementById('answer-form-template').content.cloneNode(true);
-
-        addAnswerButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                const answerFormList = this.previousElementSibling;
-                let formNum = answerFormList.querySelectorAll('div').length - 1; // Учитываем management_form
-                const newForm = template.cloneNode(true);
-                newForm.querySelectorAll('input, select, textarea').forEach(el => {
-                    el.name = el.name.replace('__prefix__', formNum);
-                    el.id = el.id.replace('__prefix__', formNum);
-                });
-                answerFormList.appendChild(newForm);
-                formNum++;
-                updateAnswerFormCount(answerFormList, formNum);
-            });
-        });
-
-        removeAnswerButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                this.parentElement.remove();
-                updateAnswerFormCount(this.parentElement.parentElement, this.parentElement.parentElement.querySelectorAll('div').length - 1);
-            });
-        });
-
-        function updateAnswerFormCount(answerFormList, formNum) {
-            const totalForms = answerFormList.querySelector('input[name$="-TOTAL_FORMS"]');
-            totalForms.value = formNum;
-        }
-
-});
     // Функция для переключения видимости дополнительных настроек
     function toggleSettings() {
         var settings = document.getElementById('additionalSettings');
@@ -373,5 +306,6 @@
             closeOrganizersModal();
         }
     }
+
 </script>
 {% endblock %}

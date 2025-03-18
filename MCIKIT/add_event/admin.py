@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Event, EventRating, Question, AnswerOption, UserAnswer
+from .models import Event, EventRating
 from django.db.models import Avg
 
 from users.admin import EventOrganizerInline
@@ -16,6 +16,3 @@ class EventAdmin(admin.ModelAdmin):
     average_rating.short_description = 'Средний рейтинг'
 
 admin.site.register(EventRating)
-admin.site.register(Question)
-admin.site.register(AnswerOption)
-admin.site.register(UserAnswer)
