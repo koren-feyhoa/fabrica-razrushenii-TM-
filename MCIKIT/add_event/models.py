@@ -1,7 +1,9 @@
+from operator import truediv
+
 from django.db import models
 from datetime import datetime, time
 from django.conf import settings
-from django.db.models import ManyToManyField, Avg
+from django.db.models import ManyToManyField, Avg, ForeignKey, TextField, PositiveIntegerField
 from django.template.context_processors import request
 from django.apps import apps
 
@@ -23,6 +25,7 @@ class Event(models.Model):
         related_name='events_organized',
         blank=True
     )
+
 
     def __str__(self):
         return self.title_event
@@ -93,29 +96,20 @@ class EventRating(models.Model):
     def __str__(self):
         return f"{self.user.Name_User} rated {self.event.title_event} with {self.rating}"
 
-
-    class Meta:
-        unique_together = ('user', 'event')  # Один пользователь может оставить только одну оценку для мероприятия
-
-    def __str__(self):
-        return f"{self.user.Name_User} rated {self.event.title_event} with {self.rating}"
-
-class Question(models.Model):
-    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='questions')
-    text = models.TextField(verbose_name="Текст вопроса")
-
-    def __str__(self):
-        return self.text
-class AnswerOption(models.Model):
-    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='answer_options')
-    text = models.CharField(max_length=255, verbose_name="Текст ответа")
-
-    def __str__(self):
-        return self.text
+class ExtraInfo(models.Model):
+    event=models.ForeignKey(Event,on_delete=models.CASCADE, related_name='extra_info')
+    question = models.TextField(blank=True, null=True)
+    field_type = models.CharField(max_length=50, choices=[
+        ('text', 'Открытый вопрос'),
+        ('choice', 'Вопрос с вариантами ответа'),
+        ('team', 'Добавление команды'),
+    ])
+    choices = models.TextField(blank=True, null=True)
 class UserAnswer(models.Model):
-    user = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='answers')
-    question = models.ForeignKey(Question, on_delete=models.CASCADE)
-    answer = models.ForeignKey(AnswerOption, on_delete=models.CASCADE)
-
-    class Meta:
-        unique_together = ('user', 'question')
+    user=models.ForeignKey('users.User',on_delete=models.CASCADE, related_name='answers')
+    extra_info = models.ForeignKey(ExtraInfo, on_delete=models.CASCADE)
+    answer = models.TextField()
+    choice = models.ForeignKey('Choice', on_delete=models.CASCADE)
+class Choice(models.Model):
+    extra_info = models.ForeignKey(ExtraInfo, on_delete=models.CASCADE, related_name='choices_list')
+    value = models.CharField(max_length=200)

@@ -7,8 +7,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import HttpResponseForbidden
 
-from .forms import EventForm, AnswerOptionForm, QuestionForm
-from .models import Event, AnswerOption, UserAnswer, Question
+from .forms import EventForm, ExtraInfoForm, ChoiceForm, UserAnswerForm
+from .models import Event, ExtraInfo, Choice, UserAnswer
 from users.models import EventOrganizer, User
 
 from django.http import JsonResponse
@@ -60,23 +60,6 @@ class EventCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
                     event=self.object,
                     added_by=self.request.user
                 )
-        question_formset = inlineformset_factory(Event, Question, fields=('text',), extra=1, can_delete=True)(
-            self.request.POST, instance=event, prefix='questions')
-
-        if question_formset.is_valid():
-            questions = question_formset.save(commit=False)
-            for question in questions:
-                if question.text:
-                    question.event = event
-                    question.save()
-                    answer_formset = inlineformset_factory(Question, AnswerOption, fields=('text',), extra=2,
-                                                           can_delete=True)(self.request.POST, instance=question,
-                                                                            prefix=f'answers-{question.id}')
-                    if answer_formset.is_valid():
-                        answer_formset.save()
-
-        messages.success(self.request, 'Мероприятие успешно создано')
-        return response
 
     def test_func(self):
         return self.request.user.is_pro_user()
@@ -119,20 +102,6 @@ class EventUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
                 event=event,
                 added_by=self.request.user
             )
-        question_formset = inlineformset_factory(Event, Question, fields=('text',), extra=1, can_delete=True)(
-            self.request.POST, instance=event, prefix='questions')
-
-        if question_formset.is_valid():
-            questions = question_formset.save(commit=False)
-            for question in questions:
-                if question.text:
-                    question.event = event
-                    question.save()
-                    answer_formset = inlineformset_factory(Question, AnswerOption, fields=('text',), extra=2,
-                                                       can_delete=True)(self.request.POST, instance=question,
-                                                                                prefix=f'answers-{question.id}')
-                    if answer_formset.is_valid():
-                        answer_formset.save()
         return response
 
     def test_func(self):
@@ -189,20 +158,67 @@ class EventDetailView(DetailView):
         return context
 
 
+#@login_required
+#def event_register(request, pk):
+#    if request.method == 'POST':
+#        event = get_object_or_404(Event, pk=pk)
+#        if not event.is_user_registered(request.user):
+#            if event.max_members == 0 or event.get_registered_count() < event.max_members:
+#                event.users_members.add(request.user)
+#                messages.success(request, 'Вы успешно зарегистрировались на мероприятие')
+#            else:
+#                messages.error(request, 'Достигнуто максимальное количество участников')
+#        return redirect('add_events:event_detail_view', pk=pk)
+#
+#    return HttpResponseForbidden()
 @login_required
 def event_register(request, pk):
+    event = get_object_or_404(Event, pk=pk)
+    extra_infos = ExtraInfo.objects.filter(event=event)
+
     if request.method == 'POST':
-        event = get_object_or_404(Event, pk=pk)
         if not event.is_user_registered(request.user):
             if event.max_members == 0 or event.get_registered_count() < event.max_members:
-                event.users_members.add(request.user)
-                messages.success(request, 'Вы успешно зарегистрировались на мероприятие')
+                form = UserAnswerForm(request.POST, extra_infos=extra_infos)
+                if form.is_valid():
+                    event.users_members.add(request.user)
+                    for info in extra_infos:
+                        if info.question:
+                            if info.field_type == 'text':
+                                answer = form.cleaned_data.get(f'extra_{info.id}')
+                                UserAnswer.objects.create(participant=request.user, extra_info=info, answer=answer)
+                            elif info.field_type == 'choice':
+                                choice_id = form.cleaned_data.get(f'extra_{info.id}')
+                                choice = Choice.objects.get(id=choice_id)
+                                UserAnswer.objects.create(participant=request.user, extra_info=info, choice=choice)
+                    messages.success(request, 'Вы успешно зарегистрировались на мероприятие')
+                else:
+                    return render(request, 'events/event_detail_view.html', {'event': event, 'form': form, 'extra_infos': extra_infos}) # Изменено
             else:
                 messages.error(request, 'Достигнуто максимальное количество участников')
         return redirect('add_events:event_detail_view', pk=pk)
-    return HttpResponseForbidden()
 
+    else:
+        if extra_infos:
+            form = UserAnswerForm(extra_infos=extra_infos)
+            return render(request, 'events/event_detail_view.html', {'event': event, 'form': form, 'extra_infos': extra_infos}) # Изменено
+        else:
+            event.users_members.add(request.user)
+            messages.success(request, 'Вы успешно зарегистрировались на мероприятие')
+            return redirect('add_events:event_detail_view', pk=pk)
 
+def add_extra_info(request, event_id):
+    event = get_object_or_404(Event, id=event_id)
+    if request.method == 'POST':
+        form = ExtraInfoForm(request.POST)
+        if form.is_valid():
+            extra_info = form.save(commit=False)
+            extra_info.event = event
+            extra_info.save()
+            return redirect('add_events:event_detail_view', pk=event_id) # Изменено
+    else:
+        form = ExtraInfoForm()
+    return render(request, 'events/event_detail_view.html', {'event': event, 'form': form}) # Изменено
 @login_required
 def event_unregister(request, pk):
     if request.method == 'POST':
@@ -231,59 +247,7 @@ def get_pro_users(request):
     return JsonResponse(list(pro_users), safe=False)
 
 
-@login_required
-def answer_questions(request, event_id):
-    event = get_object_or_404(Event, pk=event_id)
-    questions = event.questions.all()
-    user = request.user
 
-    if request.method == 'POST':
-        if questions:  # Проверяем, есть ли вопросы
-            all_questions_answered = True
-            for question in questions:
-                answer_id = request.POST.get(f'question_{question.id}')
-                if answer_id:
-                    answer = get_object_or_404(AnswerOption, pk=answer_id)
-                    UserAnswer.objects.update_or_create(
-                        user=user,
-                        question=question,
-                        defaults={'answer': answer}
-                    )
-                else:
-                    all_questions_answered = False
-
-            if all_questions_answered:
-                event.users_members.add(user)
-                return redirect('event_detail', pk=event_id)
-            else:
-                error_message = "Пожалуйста, ответьте на все вопросы."
-                return render(request, 'answer_questions.html', {'event': event, 'questions': questions, 'error_message': error_message})
-        else:  # Если вопросов нет, просто добавляем пользователя в участники
-            event.users_members.add(user)
-            return redirect('event_detail', pk=event_id)
-
-    return render(request, 'answer_questions.html', {'event': event, 'questions': questions})
-
-@login_required
-def add_question(request, event_id):
-    event = get_object_or_404(Event, pk=event_id)
-    AnswerOptionFormSet = inlineformset_factory(Question, AnswerOption, form=AnswerOptionForm, extra=3)
-
-    if request.method == 'POST':
-        question_form = QuestionForm(request.POST)
-        formset = AnswerOptionFormSet(request.POST)
-        if question_form.is_valid() and formset.is_valid():
-            question = question_form.save(commit=False)
-            question.event = event
-            question.save()
-            formset.instance = question
-            formset.save()
-            return redirect('event_detail_view', pk=event_id)  # Замените 'event_detail' на URL вашего представления деталей события
-    else:
-        question_form = QuestionForm()
-        formset = AnswerOptionFormSet()
-
-    return render(request, 'events/add_question.html', {'question_form': question_form, 'formset': formset, 'event': event})
 
 class EventReviewsView(DetailView):
     model = Event
@@ -297,3 +261,29 @@ class EventReviewsView(DetailView):
         reviews = event.ratings.select_related('user').order_by('-timestamp')
         context['reviews'] = reviews
         return context
+
+
+def add_choice(request, extra_info_id):
+    extra_info = get_object_or_404(ExtraInfo, id=extra_info_id)
+    if request.method == 'POST':
+        form = ChoiceForm(request.POST)
+        if form.is_valid():
+            choice = form.save(commit=False)
+            choice.extra_info = extra_info
+            choice.save()
+            return redirect('event_detail', event_id=extra_info.event.id)
+    else:
+        form = ChoiceForm()
+    return render(request, 'add_choice.html', {'form': form, 'extra_info': extra_info})
+
+def delete_extra_info(request, extra_info_id):
+    extra_info = get_object_or_404(ExtraInfo, id=extra_info_id)
+    event_id = extra_info.event.id
+    extra_info.delete()
+    return redirect('event_detail', event_id=event_id)
+
+def delete_choice(request, choice_id):
+    choice = get_object_or_404(Choice, id=choice_id)
+    event_id = choice.extra_info.event.id
+    choice.delete()
+    return redirect('event_detail', event_id=event_id)
