@@ -39,7 +39,11 @@ body{
 }
 
 .to-welcome{
-  width: 70%;
+  width: 80%;
+}
+
+.to-welcome p{
+  font-size: 18px;
 }
 
 .welcome-section .welcome{
@@ -77,7 +81,7 @@ body{
   padding: 0px;
   margin: 10px 0;
   border: none;
-  background-color: #385966;
+  background: transparent;
   border-bottom: 1px solid white;
   color: white;
 }
@@ -124,7 +128,6 @@ body{
 
 p{
   width: 100%;
-  font-size: 18px;
   color: white;
   text-align: center;
   align-items: center;
@@ -143,4 +146,13 @@ p{
 .start-page svg{
   position: absolute;
   align-items: right;
+  transform: translateY(20%);
+}
+
+.personaldata .text-reg{
+  font-size: 12px;
+}
+
+.personaldata .text-login{
+  font-size: 18px;
 }
