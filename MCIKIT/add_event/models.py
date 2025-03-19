@@ -106,10 +106,10 @@ class ExtraInfo(models.Model):
     ])
     choices = models.TextField(blank=True, null=True)
 class UserAnswer(models.Model):
-    user=models.ForeignKey('users.User',on_delete=models.CASCADE, related_name='answers')
-    extra_info = models.ForeignKey(ExtraInfo, on_delete=models.CASCADE)
-    answer = models.TextField()
-    choice = models.ForeignKey('Choice', on_delete=models.CASCADE)
+    user = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='answers', null=True, blank=True)
+    extra_info = models.ForeignKey(ExtraInfo, on_delete=models.CASCADE, null=True, blank=True)
+    answer = models.TextField(null=True, blank=True)
+    choice = models.ForeignKey('Choice', on_delete=models.CASCADE, null=True, blank=True)
 class Choice(models.Model):
     extra_info = models.ForeignKey(ExtraInfo, on_delete=models.CASCADE, related_name='choices_list')
     value = models.CharField(max_length=200)
