@@ -136,7 +136,7 @@ LOGIN_REDIRECT_URL='main'
 LOGOUT_REDIRECT_URL='start_page'
 
 STATICFILES_DIRS = [
-        BASE_DIR / "static",
+        BASE_DIR / "media",
 ]
 
 AUTH_USER_MODEL = 'users.User'
