@@ -15,6 +15,7 @@ body{
 }
 
 .container-signup{
+padding: 1.5%;
   display: flex;
   width: 980px;
   height: 550px;
@@ -26,9 +27,9 @@ body{
 
 .welcome-section{
   border-radius: 20px;
-  margin-top: 1.5%;
+  margin-top: 0.5%;
   margin-left: 1.5%;
-  margin-right: 1.5%;
+  margin-right: 5.5%;
   width: 50%;
   height: 95%;
   background: #1E333C;
