@@ -2,6 +2,7 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  font-family: "Roboto", sans-serif;
 }
 
 body{
@@ -15,7 +16,6 @@ body{
 }
 
 .container-signup{
-padding: 1.5%;
   display: flex;
   width: 980px;
   height: 550px;
@@ -27,9 +27,7 @@ padding: 1.5%;
 
 .welcome-section{
   border-radius: 20px;
-  margin-top: 0.5%;
-  margin-left: 1.5%;
-  margin-right: 5.5%;
+  margin: 1.5%;
   width: 50%;
   height: 95%;
   background: #1E333C;
@@ -78,11 +76,12 @@ padding: 1.5%;
 .form-container input{
   width: 100%;
   padding: 0px;
-  margin: 10px 0;
+  margin: 20px 0;
   border: none;
   background-color: #385966;
   border-bottom: 1px solid white;
   color: white;
+  outline: none;
 }
 
 .form-input::placeholder{
@@ -137,5 +136,5 @@ p{
 
 .start-page svg{
   position: absolute;
-  margin-top: 7px;
 }
+
