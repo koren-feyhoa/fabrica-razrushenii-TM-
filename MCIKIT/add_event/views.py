@@ -42,24 +42,75 @@ class EventCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
             messages.error(self.request, 'Только ProUser могут создавать мероприятия')
             return redirect('add_events:event_list')
 
-        response = super().form_valid(form)
-        event = self.object
-        # Создаем запись организатора через модель EventOrganizer для создателя события
-        EventOrganizer.objects.create(
-            user=self.request.user,
-            event=self.object,
-            added_by=self.request.user
-        )
+        try:
+            response = super().form_valid(form)
+            event = self.object
+            # Создаем запись организатора через модель EventOrganizer для создателя события
+            EventOrganizer.objects.create(
+                user=self.request.user,
+                event=self.object,
+                added_by=self.request.user
+            )
 
-        # Добавляем дополнительных организаторов
-        additional_organizers = form.cleaned_data.get('additional_organizers', [])
-        for organizer in additional_organizers:
-            if organizer != self.request.user:  # Пропускаем, если организатор уже является создателем
-                EventOrganizer.objects.create(
-                    user=organizer,
-                    event=self.object,
-                    added_by=self.request.user
+            # Добавляем дополнительных организаторов
+            additional_organizers = form.cleaned_data.get('additional_organizers', [])
+            for organizer in additional_organizers:
+                if organizer != self.request.user:  # Пропускаем, если организатор уже является создателем
+                    EventOrganizer.objects.create(
+                        user=organizer,
+                        event=self.object,
+                        added_by=self.request.user
+                    )
+
+            # Обрабатываем открытые вопросы
+            open_questions = {}
+            for key, value in self.request.POST.items():
+                if key.startswith('open_questions'):
+                    parts = key.split('[')
+                    index = int(parts[1].split(']')[0])
+                    field = parts[2].split(']')[0]
+                    if index not in open_questions:
+                        open_questions[index] = {}
+                    open_questions[index][field] = value
+
+            for question_data in open_questions.values():
+                ExtraInfo.objects.create(
+                    event=event,
+                    question=question_data['question'],
+                    field_type='text'
                 )
+
+            # Обрабатываем вопросы с вариантами ответов
+            choice_questions = {}
+            for key, value in self.request.POST.items():
+                if key.startswith('choice_questions'):
+                    parts = key.split('[')
+                    index = int(parts[1].split(']')[0])
+                    field = parts[2].split(']')[0]
+                    if index not in choice_questions:
+                        choice_questions[index] = {'answers': []}
+                    if field == 'question':
+                        choice_questions[index][field] = value
+                    elif field == 'answers':
+                        answer_index = int(parts[3].split(']')[0])
+                        choice_questions[index]['answers'].append(value)
+
+            for question_data in choice_questions.values():
+                extra_info = ExtraInfo.objects.create(
+                    event=event,
+                    question=question_data['question'],
+                    field_type='choice'
+                )
+                for answer in question_data['answers']:
+                    Choice.objects.create(
+                        extra_info=extra_info,
+                        value=answer
+                    )
+
+            return response
+        except Exception as e:
+            messages.error(self.request, f'Произошла ошибка: {e}')
+            return self.form_invalid(form)  # Возвращаем форму с ошибками
 
     def test_func(self):
         return self.request.user.is_pro_user()

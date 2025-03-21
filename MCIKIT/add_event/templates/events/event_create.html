@@ -89,8 +89,11 @@
 
                         <div class="mb-3">
                             <label class="form-label">Дополнительные вопросы</label>
-                            <button type="button" class="btn btn-outline-success btn-sm" onclick="addQuestion()">
-                                + Добавить вопрос
+                            <button type="button" class="btn btn-outline-success btn-sm" onclick="addOpenQuestion()">
+                                + Добавить открытый вопрос
+                            </button>
+                            <button type="button" class="btn btn-outline-info btn-sm" onclick="addChoiceQuestion()">
+                                + Добавить вопрос с вариантами ответа
                             </button>
                             <div id="questionsContainer">
                                 </div>
@@ -177,7 +180,59 @@
             align-items: center;
         }
     </style>
-
+<template id="openQuestionTemplate">
+    <div class="question mb-3">
+        <div class="row">
+            <div class="col-md-6">
+                <input type="text" class="form-control" name="question" placeholder="Вопрос" required>
+            </div>
+            <div class="col-md-6">
+                <button type="button" class="btn btn-success btn-sm" onclick="saveOpenAnswer(this)">
+                    Добавить
+                </button>
+                <button type="button" class="btn btn-danger btn-sm" onclick="removeQuestion(this)">
+                    Удалить
+                </button>
+            </div>
+        </div>
+    </div>
+</template>
+<template id="choiceQuestionTemplate">
+    <div class="question mb-3">
+        <div class="row">
+            <div class="col-md-6">
+                <input type="text" class="form-control" name="question" placeholder="Вопрос" required>
+            </div>
+            <div class="col-md-6">
+                <button type="button" class="btn btn-outline-primary btn-sm" onclick="addAnswer(this)">
+                    + Добавить вариант ответа
+                </button>
+                <button type="button" class="btn btn-success btn-sm" onclick="saveChoiceAnswer(this)">
+                    Добавить
+                </button>
+                <button type="button" class="btn btn-danger btn-sm" onclick="removeQuestion(this)">
+                    Удалить вопрос
+                </button>
+            </div>
+        </div>
+        <div class="answers mt-2">
+            <div class="answersContainer">
+                </div>
+        </div>
+    </div>
+</template>
+<template id="answerTemplate">
+    <div class="answer mb-2">
+        <div class="row">
+            <div class="col-md-9">
+                <input type="text" class="form-control" name="answer" placeholder="Вариант ответа" required>
+            </div>
+            <div class="col-md-3">
+                <button type="button" class="btn btn-danger btn-sm" onclick="removeAnswer(this)">Удалить</button>
+            </div>
+        </div>
+    </div>
+</template>
 {% endblock %}
 {% block extra_js %}
 <script>
@@ -306,6 +361,106 @@
             closeOrganizersModal();
         }
     }
+    function addOpenQuestion() {
+    const questionTemplate = document.getElementById('openQuestionTemplate').content.cloneNode(true);
+    const questionIndex = document.querySelectorAll('.question').length; // Получаем индекс вопроса
+    questionTemplate.querySelector('.question').dataset.index = questionIndex; // Устанавливаем индекс
+    document.getElementById('questionsContainer').appendChild(questionTemplate);
+}
+    function saveOpenAnswer(button) {
+    const question = button.closest('.question');
+    const questionText = question.querySelector('input[name="question"]').value;
+    const questionIndex = question.dataset.index; // Получаем индекс вопроса
+
+    if (!questionText) {
+        alert('Пожалуйста, введите текст вопроса.');
+        return;
+    }
+
+    // Создаем скрытое поле для текста вопроса
+    const questionInput = document.createElement('input');
+    questionInput.type = 'hidden';
+    questionInput.name = `open_questions[${questionIndex}][question]`; // Используем индекс в имени
+    questionInput.value = questionText;
+    document.querySelector('form').appendChild(questionInput);
+
+    console.log('Сохранение вопроса:', questionText);
+}
+    function addChoiceQuestion() {
+    const choiceQuestionTemplate = document.getElementById('choiceQuestionTemplate').content.cloneNode(true);
+    const questionIndex = document.querySelectorAll('.question').length; // Получаем индекс вопроса
+    choiceQuestionTemplate.querySelector('.question').dataset.index = questionIndex; // Устанавливаем индекс
+    document.getElementById('questionsContainer').appendChild(choiceQuestionTemplate);
+}
+    function saveChoiceAnswer(button) {
+    const question = button.closest('.question');
+    const questionText = question.querySelector('input[name="question"]').value;
+    const answerInputs = question.querySelectorAll('input[name="answer"]');
+    const questionIndex = question.dataset.index; // Получаем индекс вопроса
+
+    const answers = [];
+
+    if (!questionText) {
+        alert('Пожалуйста, введите текст вопроса.');
+        return;
+    }
+
+    if (answerInputs.length === 0) {
+        alert('Пожалуйста, добавьте хотя бы один вариант ответа.');
+        return;
+    }
+
+    let hasEmptyAnswer = false;
+    answerInputs.forEach(answerInput => {
+        const answer = answerInput.value;
+        if (!answer) {
+            hasEmptyAnswer = true;
+        }
+        answers.push(answer);
+    });
+
+    if (hasEmptyAnswer) {
+        alert('Пожалуйста, заполните все варианты ответа.');
+        return;
+    }
+
+    if (answers.length < 2) {
+        alert('Пожалуйста, добавьте минимум 2 варианта ответа.');
+        return;
+    }
+
+    // Создаем скрытое поле для текста вопроса
+    const questionInput = document.createElement('input');
+    questionInput.type = 'hidden';
+    questionInput.name = `choice_questions[${questionIndex}][question]`; // Используем индекс в имени
+    questionInput.value = questionText;
+    document.querySelector('form').appendChild(questionInput);
+
+    // Создаем скрытые поля для вариантов ответа
+    answers.forEach((answer, index) => {
+        const answerInput = document.createElement('input');
+        answerInput.type = 'hidden';
+        answerInput.name = `choice_questions[${questionIndex}][answers][${index}]`; // Используем индексы в имени
+        answerInput.value = answer;
+        document.querySelector('form').appendChild(answerInput);
+    });
+
+    console.log('Сохранение вопроса с вариантами:', questionText, answers);
+}
+    function removeQuestion(button) {
+        button.closest('.question').remove();
+    }
+
+    function addAnswer(button) {
+        const answerTemplate = document.getElementById('answerTemplate').content.cloneNode(true);
+        button.closest('.question').querySelector('.answersContainer').appendChild(answerTemplate);
+    }
+
+    function removeAnswer(button) {
+        button.closest('.answer').remove();
+    }
+
+
 
 </script>
 {% endblock %}
