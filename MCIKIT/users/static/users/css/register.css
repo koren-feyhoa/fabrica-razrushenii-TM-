@@ -1,8 +1,8 @@
-* {
-  font-family: "Roboto", sans-serif; 
+*{
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  font-family: "Roboto", sans-serif;
 }
 
 body{
@@ -48,7 +48,8 @@ body{
 }
 
 .welcome-section .welcome{
-  font-size: 36px;
+  margin-top: 15px;
+  font-size: 26px;
   margin-bottom: 20px;
   color: #02DAEE;
 }
@@ -78,13 +79,14 @@ body{
 }
 
 .form-container input{
-  width: 100%;
+  width: 95%;
   padding: 0px;
-  margin: 10px 0;
+  margin: 10px 10px;
   border: none;
   background: transparent;
   border-bottom: 1px solid white;
   color: white;
+  outline: none;
 }
 
 .form-input::placeholder{
@@ -103,6 +105,7 @@ body{
   margin-bottom: 15px;
   text-transform: uppercase;
   justify-content: center;
+  margin-top: 15px;
 }
 
 .sign-button:hover{
