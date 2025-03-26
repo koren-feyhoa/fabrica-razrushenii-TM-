@@ -39,12 +39,15 @@ body{
 }
 
 .to-welcome{
-  width: 87%;
-  margin-top: 20px;
+  width: 80%;
+}
+
+.to-welcome p{
+  font-size: 18px;
 }
 
 .welcome-section .welcome{
-  font-size: 36px;
+  font-size: 26px;
   margin-bottom: 20px;
   color: #02DAEE;
 }
@@ -74,7 +77,7 @@ body{
 }
 
 .form-container input{
-  width: 100%;
+  width: 95%;
   padding: 0px;
   margin: 20px 0;
   border: none;
@@ -100,11 +103,20 @@ body{
   margin-bottom: 15px;
   text-transform: uppercase;
   justify-content: center;
+  margin-top: 15px;
 }
 
 .sign-button:hover{
   background-color: #017D88;
   color: #1E333C;
+}
+
+.icons-login{
+  color: white;
+  width: 70%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .personaldata{
@@ -118,7 +130,6 @@ body{
 
 p{
   width: 100%;
-  font-size: 18px;
   color: white;
   text-align: center;
   align-items: center;
@@ -127,7 +138,7 @@ p{
 .start-page a{
   color: white;
   display: flex;
-  justify-content: left;
+  justify-content: right;
 }
 
 .personaldata a:hover{
@@ -136,5 +147,14 @@ p{
 
 .start-page svg{
   position: absolute;
+  align-items: right;
+  transform: translateY(20%);
 }
 
+.personaldata .text-reg{
+  font-size: 12px;
+}
+
+.personaldata .text-login{
+  font-size: 18px;
+}

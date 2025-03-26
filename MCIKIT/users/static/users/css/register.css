@@ -1,5 +1,4 @@
-* {
-  font-family: "Roboto", sans-serif; 
+*{
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -49,7 +48,8 @@ body{
 }
 
 .welcome-section .welcome{
-  font-size: 36px;
+  margin-top: 15px;
+  font-size: 26px;
   margin-bottom: 20px;
   color: #02DAEE;
 }
