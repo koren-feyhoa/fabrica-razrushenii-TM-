@@ -121,8 +121,8 @@ class UserAnswer(models.Model):
     user = models.ForeignKey('users.User', on_delete=models.CASCADE, null=True, blank=True)
     extra_info = models.ForeignKey(ExtraInfo, on_delete=models.CASCADE, null=True, blank=True)
     answer = models.TextField(blank=True, null=True)
-    choices = models.ManyToManyField('Choice', blank=True)
     is_team_captain = models.BooleanField(default=False)
+    team_name = models.CharField(max_length=100, blank=True, null=True, verbose_name='Название команды')
     team_members = models.ManyToManyField('users.User', blank=True, related_name='team_memberships')
 
     def __str__(self):

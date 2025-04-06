@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>{{ event.title_event }} - Участники</h2>
+    
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Имя</th>
+                    <th>Группа</th>
+                    <th>Команда</th>
+                    <th>Роль в команде</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for member in event.users_members.all %}
+                    <tr>
+                        <td>{{ member.Name_User }}</td>
+                        <td>{{ member.Number_of_group }}</td>
+                        <td>
+                            {% for answer in member.useranswer_set.all %}
+                                {% if answer.extra_info.field_type == 'team' %}
+                                    {% if answer.is_captain %}
+                                        <strong>{{ answer.team_name }}</strong><br>
+                                        1. {{ member.Name_User }} (Капитан)<br>
+                                        {% for team_member in answer.team_members.all %}
+                                            {{ forloop.counter|add:"1" }}. {{ team_member.Name_User }}<br>
+                                        {% endfor %}
+                                    {% elif answer.team_members.all %}
+                                        {% for captain_answer in answer.extra_info.useranswer_set.all %}
+                                            {% if captain_answer.is_captain and member in captain_answer.team_members.all %}
+                                                <strong>{{ captain_answer.team_name }}</strong><br>
+                                                1. {{ captain_answer.user.Name_User }} (Капитан)<br>
+                                                {% for team_member in captain_answer.team_members.all %}
+                                                    {{ forloop.counter|add:"1" }}. {{ team_member.Name_User }}<br>
+                                                {% endfor %}
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+                                {% endif %}
+                            {% endfor %}
+                        </td>
+                        <td>
+                            {% for answer in member.useranswer_set.all %}
+                                {% if answer.extra_info.field_type == 'team' %}
+                                    {% if answer.is_captain %}
+                                        Капитан
+                                    {% else %}
+                                        Участник
+                                    {% endif %}
+                                {% endif %}
+                            {% endfor %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <a href="{% url 'add_events:event_detail_view' event.pk %}" class="btn btn-secondary">Назад к мероприятию</a>
+</div>
+{% endblock %}

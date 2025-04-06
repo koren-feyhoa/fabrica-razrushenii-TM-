@@ -103,6 +103,14 @@ class UserAnswerForm(forms.Form):
         for info in extra_infos:
             if info.field_type == 'team':
                 info_id = str(info.id)
+                # Поле для названия команды
+                self.fields[f'team_name_{info_id}'] = forms.CharField(
+                    label='Название команды',
+                    required=False,
+                    widget=forms.TextInput(attrs={'class': 'form-control'})
+                )
+                
+                # Поле для выбора участников
                 self.fields[f'team_members_{info_id}'] = forms.ModelMultipleChoiceField(
                     label='Участники команды',
                     queryset=User.objects.exclude(id=user.id) if user else User.objects.none(),

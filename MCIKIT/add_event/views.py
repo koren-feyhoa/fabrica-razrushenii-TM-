@@ -214,7 +214,12 @@ def toggle_registration(request, pk):
 def event_detail_view(request, pk):
     event = get_object_or_404(Event, pk=pk)
     is_organizer = request.user.is_authenticated and request.user in event.organizers.all()
-    is_registered = request.user.is_authenticated and request.user in event.users_members.all()
+    # Проверяем, зарегистрирован ли пользователь напрямую или как член команды
+    is_registered = event.users_members.filter(id=request.user.id).exists() or \
+                    UserAnswer.objects.filter(
+                        extra_info__event=event,
+                        team_members=request.user
+                    ).exists()
     registered_count = event.users_members.count()
     extra_infos = event.extra_info.all()
     
@@ -310,6 +315,7 @@ def event_register(request, pk):
                                     # Если участники не выбраны, пропускаем создание команды
                                     continue
                                 
+                                team_name = form.cleaned_data.get(f'team_name_{extra_info.id}')
                                 if team_members:  # Проверяем размер команды только если есть участники
                                     if len(team_members) + 1 < extra_info.min_team_size:
                                         return JsonResponse({
@@ -321,13 +327,26 @@ def event_register(request, pk):
                                             'error': f'В команде должно быть не более {extra_info.max_team_size} участников (включая капитана)'
                                         }, status=400)
                                     
+                                    # Создаем ответ для команды
                                     user_answer = UserAnswer.objects.create(
                                         user=request.user,
                                         extra_info=extra_info,
-                                        is_captain=True
+                                        is_captain=True,
+                                        team_name=team_name
                                     )
                                     user_answer.team_members.set(team_members)
                                     print('Team answer created')
+                                    
+                                    # Регистрируем всех участников команды
+                                    for member in team_members:
+                                        event.users_members.add(member)
+                                        # Создаем ответы для остальных вопросов
+                                        for other_info in extra_infos:
+                                            if other_info.id != extra_info.id:
+                                                UserAnswer.objects.create(
+                                                    user=member,
+                                                    extra_info=other_info
+                                                )
                             else:
                                 answer = form.cleaned_data.get(f'extra_{extra_info.id}')
                                 if answer:
