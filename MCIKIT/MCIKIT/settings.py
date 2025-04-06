@@ -135,8 +135,10 @@ LOGIN_REDIRECT_URL='main'
 
 LOGOUT_REDIRECT_URL='start_page'
 
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
 STATICFILES_DIRS = [
-        BASE_DIR / "media",
+    BASE_DIR / 'static',
 ]
 
 AUTH_USER_MODEL = 'users.User'

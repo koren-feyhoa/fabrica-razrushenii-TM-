@@ -96,19 +96,40 @@ class EventRating(models.Model):
         return f"{self.user.Name_User} rated {self.event.title_event} with {self.rating}"
 
 class ExtraInfo(models.Model):
-    event=models.ForeignKey(Event,on_delete=models.CASCADE, related_name='extra_info')
-    question = models.TextField(blank=True, null=True)
-    field_type = models.CharField(max_length=50, choices=[
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='extra_info')
+    question = models.TextField(verbose_name="Вопрос", blank=True, null=True)
+    field_type = models.CharField(max_length=50, verbose_name="Тип вопроса", choices=[
         ('text', 'Открытый вопрос'),
         ('choice', 'Вопрос с вариантами ответа'),
         ('team', 'Добавление команды'),
     ])
-    choices = models.TextField(blank=True, null=True)
+    allow_multiple = models.BooleanField(default=False, verbose_name="Разрешить выбор нескольких вариантов")
+    min_team_size = models.PositiveIntegerField(verbose_name="Минимальный размер команды", null=True, blank=True)
+    max_team_size = models.PositiveIntegerField(verbose_name="Максимальный размер команды", null=True, blank=True)
+    
+    @property
+    def is_team_question(self):
+        return self.field_type == 'team'
+    
+    @property
+    def has_team_limits(self):
+        return self.is_team_question and (self.min_team_size is not None or self.max_team_size is not None)
+
+    def __str__(self):
+        return f"{self.event.title_event} - {self.question}"
 class UserAnswer(models.Model):
-    user = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='answers', null=True, blank=True)
+    user = models.ForeignKey('users.User', on_delete=models.CASCADE, null=True, blank=True)
     extra_info = models.ForeignKey(ExtraInfo, on_delete=models.CASCADE, null=True, blank=True)
-    answer = models.TextField(null=True, blank=True)
-    choice = models.ForeignKey('Choice', on_delete=models.CASCADE, null=True, blank=True)
+    answer = models.TextField(blank=True, null=True)
+    choices = models.ManyToManyField('Choice', blank=True)
+    is_team_captain = models.BooleanField(default=False)
+    team_members = models.ManyToManyField('users.User', blank=True, related_name='team_memberships')
+
+    def __str__(self):
+        return f"{self.user.Name_User if self.user else 'Anonymous'} - {self.extra_info.question}"
 class Choice(models.Model):
     extra_info = models.ForeignKey(ExtraInfo, on_delete=models.CASCADE, related_name='choices_list')
-    value = models.CharField(max_length=200)
+    value = models.CharField(max_length=200, verbose_name="Вариант ответа")
+
+    def __str__(self):
+        return self.value

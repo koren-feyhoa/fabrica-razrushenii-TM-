@@ -1,0 +1,403 @@
+{% load form_filters %}
+<!-- Modal -->
+<div class="modal fade" id="questionsModal" tabindex="-1" aria-labelledby="questionsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="questionsModalLabel">Дополнительные вопросы</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" id="questionsForm" action="{% url 'add_events:event_register' event.pk %}">
+                    {% csrf_token %}
+                    {% for field in form %}
+                        <div class="mb-3">
+                            {% if field.name|startswith:'is_captain_' %}
+                                <div class="form-check mb-3">
+                                    {{ field }}
+                                    <label class="form-check-label" for="{{ field.id_for_label }}">
+                                        {{ field.label }}
+                                    </label>
+                                </div>
+                            {% elif field.name|startswith:'team_members_' %}
+                                <div class="team-members-section">
+                                    <label class="form-label">{{ field.label }}</label>
+                                    <div id="team_members_{{ field.id_for_label }}_container">
+                                        <div class="input-group mb-3 position-relative">
+                                            <input type="text" class="form-control search-users" 
+                                                   id="user_search_{{ field.id_for_label }}"
+                                                   placeholder="Поиск по имени, логину или группе"
+                                                   data-field-id="{{ field.id_for_label }}">
+                                            <div class="search-results" id="search_results_{{ field.id_for_label }}"></div>
+                                        </div>
+                                        <div class="selected-members">
+                                            <h6>Выбранные участники:</h6>
+                                            <ul class="list-group" id="selected_members_{{ field.id_for_label }}"></ul>
+                                        </div>
+                                        <div style="display: none;">
+                                            {{ field }}
+                                        </div>
+                                    </div>
+                                    {% if field.help_text %}
+                                        <div class="form-text">{{ field.help_text }}</div>
+                                    {% endif %}
+                                </div>
+                            {% else %}
+                                <label class="form-label">{{ field.label }}</label>
+                                {{ field }}
+                                {% if field.help_text %}
+                                    <div class="form-text">{{ field.help_text }}</div>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="submit" form="questionsForm" class="btn btn-primary">Зарегистрироваться</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.carousel-control-prev,
+.carousel-control-next {
+    width: 5%;
+    color: #000;
+}
+
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+    background-color: #000;
+    border-radius: 50%;
+    padding: 10px;
+}
+
+.question-slide {
+    padding: 20px;
+    min-height: 200px;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-select[multiple] {
+    height: 150px;
+}
+
+.team-member-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.team-member-item {
+    margin-bottom: 5px;
+}
+
+.team-member-number {
+    font-weight: bold;
+    margin-right: 10px;
+    color: #6c757d;
+}
+
+.member-name {
+    font-weight: 500;
+}
+
+.selected-members {
+    margin-top: 10px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.selected-members ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.selected-members .text-muted {
+    margin-left: 5px;
+    font-size: 0.9em;
+}
+
+.search-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.search-result-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-name {
+    font-weight: bold;
+    margin-bottom: 2px;
+}
+
+.user-details {
+    font-size: 0.9em;
+    color: #666;
+}
+
+.username {
+    color: #007bff;
+}
+
+.group {
+    color: #28a745;
+}
+
+.search-result-item:hover,
+.search-result-item.selected {
+    background-color: #f8f9fa;
+}
+
+.search-result-item:last-child {
+    border-bottom: none;
+}
+
+.no-results {
+    padding: 8px 12px;
+    color: #6c757d;
+    text-align: center;
+}
+
+.selected-members {
+    margin-top: 1rem;
+}
+
+.team-member-number {
+    margin-right: 0.5rem;
+    color: #6c757d;
+}
+</style>
+
+<script>
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function updateTeamMembersList(fieldId) {
+        const container = document.getElementById(`selected_members_${fieldId}`);
+        if (!container) return;
+
+        container.innerHTML = '';
+        
+        if (!window.selectedMembers[fieldId]) return;
+        
+        window.selectedMembers[fieldId].forEach((member, index) => {
+            const item = document.createElement('li');
+            item.className = 'list-group-item d-flex justify-content-between align-items-center';
+            item.innerHTML = `
+                <div>
+                    <span class="team-member-number">${index + 1}.</span>
+                    <span class="member-name">${member.Name_User}</span>
+                    <small class="text-muted">(${member.username} | ${member.group})</small>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="window.removeTeamMember('${fieldId}', ${member.id})">
+                    <i class="bi bi-x"></i>
+                </button>
+            `;
+            container.appendChild(item);
+        });
+
+        // Обновляем счетчик участников
+        const helpText = document.querySelector(`#team_members_${fieldId}_container .form-text`);
+        if (helpText) {
+            const maxSizeMatch = helpText.textContent.match(/максимум (\d+)/);
+            if (maxSizeMatch) {
+                const maxSize = parseInt(maxSizeMatch[1]);
+                const currentCount = window.selectedMembers[fieldId].length;
+                helpText.innerHTML = `Выбрано участников: ${currentCount} из ${maxSize}`;
+            }
+        }
+    }
+
+    function removeTeamMember(fieldId, userId) {
+        if (!window.selectedMembers[fieldId]) return;
+
+        window.selectedMembers[fieldId] = window.selectedMembers[fieldId].filter(member => member.id !== userId);
+
+        const select = document.querySelector(`select[name="team_members_${fieldId}"]`);
+        if (select) {
+            const option = Array.from(select.options).find(opt => opt.value == userId);
+            if (option) {
+                option.selected = false;
+            }
+        }
+
+        updateTeamMembersList(fieldId);
+    }
+
+    function handleFormSubmit(event) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+
+        // Добавляем CSRF токен
+        formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Закрываем модальное окно
+                const modal = document.getElementById('questionsModal');
+                const bsModal = bootstrap.Modal.getInstance(modal);
+                bsModal.hide();
+
+                // Перезагружаем страницу
+                window.location.reload();
+            } else if (data.error) {
+                alert(data.error);
+            } else if (data.errors) {
+                // Показываем все ошибки формы
+                const errorMessages = [];
+                for (const field in data.errors) {
+                    errorMessages.push(`${field}: ${data.errors[field].join(', ')}`);
+                }
+                alert(errorMessages.join('\n'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Произошла ошибка при отправке формы');
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Отключаем required для скрытых полей выбора участников
+        document.querySelectorAll('select[name^="team_members_"]').forEach(select => {
+            select.required = false;
+        });
+
+        window.selectedMembers = {};
+        
+        document.querySelectorAll('.search-users').forEach(input => {
+            const fieldId = input.dataset.fieldId;
+            window.selectedMembers[fieldId] = [];
+
+            const resultsContainer = document.getElementById(`search_results_${fieldId}`);
+            let timeoutId = null;
+
+            input.addEventListener('input', () => {
+                const query = input.value.trim();
+
+                if (timeoutId) {
+                    clearTimeout(timeoutId);
+                }
+
+                if (query.length < 2) {
+                    resultsContainer.innerHTML = '';
+                    return;
+                }
+
+                timeoutId = setTimeout(() => {
+                    fetch(`{% url 'add_events:search_users' %}?q=${encodeURIComponent(query)}`, {
+                        headers: {
+                            'X-CSRFToken': getCookie('csrftoken')
+                        }
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (!data.users || data.users.length === 0) {
+                                resultsContainer.innerHTML = '<div class="no-results">Пользователи не найдены</div>';
+                                return;
+                            }
+
+                            resultsContainer.innerHTML = '';
+                            data.users.forEach(user => {
+                                const item = document.createElement('div');
+                                item.className = 'search-result-item';
+                                item.innerHTML = `
+                                    <div class="user-info">
+                                        <div class="user-name">${user.Name_User}</div>
+                                        <div class="user-details">
+                                            <span class="username">${user.username}</span> | 
+                                            <span class="group">Группа: ${user.Number_of_group}</span>
+                                        </div>
+                                    </div>`;
+
+                                item.addEventListener('click', () => {
+                                    if (window.selectedMembers[fieldId].some(member => member.id === user.id)) {
+                                        alert('Этот пользователь уже добавлен в команду');
+                                        return;
+                                    }
+
+                                    window.selectedMembers[fieldId].push({
+                                        id: user.id,
+                                        Name_User: user.Name_User,
+                                        username: user.username,
+                                        group: user.Number_of_group
+                                    });
+
+                                    const select = document.querySelector(`select[name="team_members_${fieldId}"]`);
+                                    if (select) {
+                                        const option = Array.from(select.options).find(opt => opt.value == user.id);
+                                        if (option) {
+                                            option.selected = true;
+                                        }
+                                    }
+
+                                    updateTeamMembersList(fieldId);
+                                    input.value = '';
+                                    resultsContainer.innerHTML = '';
+                                });
+
+                                resultsContainer.appendChild(item);
+                            });
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            resultsContainer.innerHTML = '<div class="error">Ошибка поиска</div>';
+                        });
+                }, 300);
+            });
+        });
+
+        // Добавляем обработчик отправки формы
+        const form = document.getElementById('questionsForm');
+        if (form) {
+            form.addEventListener('submit', handleFormSubmit);
+        }
+    });
+</script>

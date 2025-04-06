@@ -59,9 +59,34 @@ class EventForm(forms.ModelForm):
 
 
 class ExtraInfoForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['field_type'].widget.attrs.update({'class': 'form-control', 'onchange': 'handleFieldTypeChange(this)'})
+        self.fields['question'].widget.attrs.update({'class': 'form-control'})
+        self.fields['allow_multiple'].widget.attrs.update({'class': 'form-control'})
+        self.fields['min_team_size'].widget.attrs.update({'class': 'form-control', 'min': '1'})
+        self.fields['max_team_size'].widget.attrs.update({'class': 'form-control', 'min': '1'})
+
     class Meta:
         model = ExtraInfo
-        fields = ['question', 'field_type']
+        fields = ['question', 'field_type', 'allow_multiple', 'min_team_size', 'max_team_size']
+
+    def clean(self):
+        cleaned_data = super().clean()
+        field_type = cleaned_data.get('field_type')
+        min_team_size = cleaned_data.get('min_team_size')
+        max_team_size = cleaned_data.get('max_team_size')
+
+        if field_type == 'team':
+            if not min_team_size or not max_team_size:
+                raise forms.ValidationError('Для команды необходимо указать минимальный и максимальный размер')
+            if min_team_size > max_team_size:
+                raise forms.ValidationError({
+                    'min_team_size': 'Минимальный размер команды не может быть больше максимального'
+                })
+            if min_team_size < 1:
+                raise forms.ValidationError('Минимальный размер команды должен быть не менее 1')
+        return cleaned_data
 
 class ChoiceForm(forms.ModelForm):
     class Meta:
@@ -72,13 +97,61 @@ class ChoiceForm(forms.ModelForm):
 class UserAnswerForm(forms.Form):
     def __init__(self, *args, **kwargs):
         extra_infos = kwargs.pop('extra_infos', [])
+        user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
+
         for info in extra_infos:
-            if info.question:
+            if info.field_type == 'team':
+                info_id = str(info.id)
+                self.fields[f'team_members_{info_id}'] = forms.ModelMultipleChoiceField(
+                    label='Участники команды',
+                    queryset=User.objects.exclude(id=user.id) if user else User.objects.none(),
+                    required=False,
+                    widget=forms.SelectMultiple(attrs={'class': 'form-control', 'style': 'display: none;'}),
+                    help_text=f'Минимум {info.min_team_size-1}, максимум {info.max_team_size-1} участников (вы будете капитаном команды)'
+                )
+            elif info.question:
                 if info.field_type == 'text':
-                    self.fields[f'extra_{info.id}'] = forms.CharField(label=info.question, required=True)
+                    self.fields[f'extra_{info.id}'] = forms.CharField(
+                        label=info.question,
+                        required=True,
+                        widget=forms.Textarea(attrs={'class': 'form-control'})
+                    )
                 elif info.field_type == 'choice':
                     choices = Choice.objects.filter(extra_info=info)
-                    self.fields[f'extra_{info.id}'] = forms.ChoiceField(label=info.question, choices=[(choice.id, choice.value) for choice in choices], required=True)
+                    if info.allow_multiple:
+                        self.fields[f'extra_{info.id}'] = forms.ModelMultipleChoiceField(
+                            label=info.question,
+                            queryset=choices,
+                            required=True,
+                            widget=forms.CheckboxSelectMultiple
+                        )
+                    else:
+                        self.fields[f'extra_{info.id}'] = forms.ModelChoiceField(
+                            label=info.question,
+                            queryset=choices,
+                            required=True,
+                            widget=forms.RadioSelect
+                        )
 
+    def clean(self):
+        cleaned_data = super().clean()
+        for field_name, value in cleaned_data.items():
+            if field_name.startswith('team_members_'):
+                info_id = field_name.split('_')[-1]
+                team_members = value
+                extra_info = ExtraInfo.objects.get(id=info_id)
+
+                if not team_members:
+                    return cleaned_data  # Если нет участников, пропускаем валидацию
+                if len(team_members) + 1 < extra_info.min_team_size:
+                    raise forms.ValidationError(
+                        f'В команде должно быть не менее {extra_info.min_team_size} участников (включая капитана)'
+                    )
+                if len(team_members) + 1 > extra_info.max_team_size:
+                    raise forms.ValidationError(
+                        f'В команде должно быть не более {extra_info.max_team_size} участников (включая капитана)'
+                    )
+
+        return cleaned_data
 

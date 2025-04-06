@@ -1,0 +1,160 @@
+*{
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Roboto", sans-serif;
+}
+
+body{
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #1B2D34;
+}
+
+.container-signup{
+  display: flex;
+  width: 980px;
+  height: 550px;
+  background: #385966;
+  border-radius: 20px;
+  overflow: hidden;
+  position: relative;
+}
+
+.welcome-section{
+  border-radius: 20px;
+  margin: 1.5%;
+  width: 50%;
+  height: 95%;
+  background: #1E333C;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0 40px;
+}
+
+.to-welcome{
+  width: 80%;
+}
+
+.to-welcome p{
+  font-size: 18px;
+}
+
+.welcome-section .welcome{
+  font-size: 26px;
+  margin-bottom: 20px;
+  color: #02DAEE;
+}
+
+.forms-container{
+  position: relative;
+  width: 50%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.form-container{
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.form-container h2{
+  margin-bottom: 0;
+  text-align: center;
+  color: white;
+}
+
+.form-container input{
+  width: 95%;
+  padding: 0px;
+  margin: 20px 0;
+  border: none;
+  background-color: #385966;
+  border-bottom: 1px solid white;
+  color: white;
+  outline: none;
+}
+
+.form-input::placeholder{
+  color: #C9C9C9;
+}
+
+.sign-button{
+  width: 100%;
+  height: 50px;
+  border-radius: 20px;
+  text-align: center;
+  border: none;
+  background-color: #47939A;
+  color: white;
+  font-weight: bold;
+  margin-bottom: 15px;
+  text-transform: uppercase;
+  justify-content: center;
+  margin-top: 15px;
+}
+
+.sign-button:hover{
+  background-color: #017D88;
+  color: #1E333C;
+}
+
+.icons-login{
+  color: white;
+  width: 70%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.personaldata{
+  margin-top: 10px;
+}
+
+.personaldata a{
+  text-align: center;
+  color: #02DAEE;
+}
+
+p{
+  width: 100%;
+  color: white;
+  text-align: center;
+  align-items: center;
+}
+
+.start-page a{
+  color: white;
+  display: flex;
+  justify-content: right;
+}
+
+.personaldata a:hover{
+  border-bottom: outset;
+}
+
+.start-page svg{
+  position: absolute;
+  align-items: right;
+  transform: translateY(20%);
+}
+
+.personaldata .text-reg{
+  font-size: 12px;
+}
+
+.personaldata .text-login{
+  font-size: 18px;
+}

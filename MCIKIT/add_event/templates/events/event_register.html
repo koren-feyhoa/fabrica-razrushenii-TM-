@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Регистрация на мероприятие "{{ event.title_event }}"</h2>
+    
+    <div class="card mt-4">
+        <div class="card-body">
+            <h5 class="card-title">Информация о мероприятии</h5>
+            <p class="card-text">{{ event.description_Event }}</p>
+            <p><strong>Место:</strong> {{ event.event_place }}</p>
+            <p><strong>Дата:</strong> {{ event.event_date }}</p>
+            <p><strong>Время:</strong> {{ event.event_time }}</p>
+        </div>
+    </div>
+
+    <form method="post" class="mt-4">
+        {% csrf_token %}
+        
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            {{ form.non_field_errors }}
+        </div>
+        {% endif %}
+
+        {% for info in extra_infos %}
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5 class="card-title">{{ info.question }}</h5>
+                    
+                    {% if info.field_type == 'text' %}
+                        <div class="form-group">
+                            {{ form.errors }}
+                            {{ form|get_field:'extra_'|add:info.id }}
+                            {% if form|get_field:'extra_'|add:info.id|get_errors %}
+                            <div class="alert alert-danger">
+                                {{ form|get_field:'extra_'|add:info.id|get_errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    
+                    {% elif info.field_type == 'choice' %}
+                        {% if info.allow_multiple %}
+                            <div class="form-group">
+                                {{ form|get_field:'extra_'|add:info.id }}
+                                {% if form|get_field:'extra_'|add:info.id|get_errors %}
+                                <div class="alert alert-danger">
+                                    {{ form|get_field:'extra_'|add:info.id|get_errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <div class="form-group">
+                                {{ form|get_field:'extra_'|add:info.id }}
+                                {% if form|get_field:'extra_'|add:info.id|get_errors %}
+                                <div class="alert alert-danger">
+                                    {{ form|get_field:'extra_'|add:info.id|get_errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    
+                    {% elif info.field_type == 'team' %}
+                        <div class="form-check mb-3">
+                            {{ form|get_field:'is_captain_'|add:info.id }}
+                            <label class="form-check-label" for="id_is_captain_{{ info.id }}">
+                                Я капитан команды
+                            </label>
+                        </div>
+                        
+                        <div id="team_members_{{ info.id }}_container" style="display: none;">
+                            <div class="form-group">
+                                <label>Участники команды</label>
+                                {{ form|get_field:'team_members_'|add:info.id }}
+                                <small class="form-text text-muted">
+                                    Минимум {{ info.min_team_size }}, максимум {{ info.max_team_size }} участников
+                                </small>
+                                {% if form|get_field:'team_members_'|add:info.id|get_errors %}
+                                <div class="alert alert-danger">
+                                    {{ form|get_field:'team_members_'|add:info.id|get_errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <script>
+                            document.addEventListener('DOMContentLoaded', function() {
+                                const captainCheckbox = document.getElementById('id_is_captain_{{ info.id }}');
+                                const teamMembersContainer = document.getElementById('team_members_{{ info.id }}_container');
+                                
+                                function toggleTeamMembers() {
+                                    teamMembersContainer.style.display = captainCheckbox.checked ? 'block' : 'none';
+                                }
+                                
+                                captainCheckbox.addEventListener('change', toggleTeamMembers);
+                                toggleTeamMembers(); // Initial state
+                            });
+                        </script>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+
+        <div class="mt-4 mb-4">
+            <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
+            <a href="{% url 'add_events:event_detail_view' event.id %}" class="btn btn-secondary">Отмена</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

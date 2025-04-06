@@ -1,3 +1,5 @@
+{% extends 'base.html' %}
+{% load form_filters %}
 {% load static %}
 
 {% block content %}
@@ -89,14 +91,19 @@
 
                         <div class="mb-3">
                             <label class="form-label">Дополнительные вопросы</label>
-                            <button type="button" class="btn btn-outline-success btn-sm" onclick="addOpenQuestion()">
-                                + Добавить открытый вопрос
-                            </button>
-                            <button type="button" class="btn btn-outline-info btn-sm" onclick="addChoiceQuestion()">
-                                + Добавить вопрос с вариантами ответа
-                            </button>
-                            <div id="questionsContainer">
-                                </div>
+                            <div class="btn-group w-100" role="group">
+                                <button type="button" class="btn btn-outline-primary" onclick="addOpenQuestion()">
+                                    <i class="bi bi-pencil-square"></i> Открытый вопрос
+                                </button>
+                                <button type="button" class="btn btn-outline-primary" onclick="addChoiceQuestion()">
+                                    <i class="bi bi-list-check"></i> Вопрос с вариантами
+                                </button>
+                                <button type="button" class="btn btn-outline-primary" onclick="addTeamQuestion()">
+                                    <i class="bi bi-people"></i> Добавить команду
+                                </button>
+                            </div>
+                            <div id="questionsContainer" class="mt-3">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -182,53 +189,96 @@
     </style>
 <template id="openQuestionTemplate">
     <div class="question mb-3">
-        <div class="row">
-            <div class="col-md-6">
-                <input type="text" class="form-control" name="question" placeholder="Вопрос" required>
+        <div class="card">
+            <div class="card-header bg-light">
+                <i class="bi bi-pencil-square"></i> Открытый вопрос
             </div>
-            <div class="col-md-6">
-                <button type="button" class="btn btn-success btn-sm" onclick="saveOpenAnswer(this)">
-                    Добавить
-                </button>
-                <button type="button" class="btn btn-danger btn-sm" onclick="removeQuestion(this)">
-                    Удалить
-                </button>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <input type="text" class="form-control" name="question" placeholder="Введите ваш вопрос" required>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <button type="button" class="btn btn-success btn-sm" onclick="saveOpenAnswer(this)">
+                            <i class="bi bi-check-lg"></i> Сохранить
+                        </button>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="removeQuestion(this)">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </template>
 <template id="choiceQuestionTemplate">
     <div class="question mb-3">
-        <div class="row">
-            <div class="col-md-6">
-                <input type="text" class="form-control" name="question" placeholder="Вопрос" required>
+        <div class="card">
+            <div class="card-header bg-light">
+                <i class="bi bi-list-check"></i> Вопрос с вариантами ответа
             </div>
-            <div class="col-md-6">
-                <button type="button" class="btn btn-outline-primary btn-sm" onclick="addAnswer(this)">
-                    + Добавить вариант ответа
-                </button>
-                <button type="button" class="btn btn-success btn-sm" onclick="saveChoiceAnswer(this)">
-                    Добавить
-                </button>
-                <button type="button" class="btn btn-danger btn-sm" onclick="removeQuestion(this)">
-                    Удалить вопрос
-                </button>
-            </div>
-        </div>
-        <div class="answers mt-2">
-            <div class="answersContainer">
+            <div class="card-body">
+                <div class="mb-3">
+                    <input type="text" class="form-control" name="question" placeholder="Введите ваш вопрос" required>
                 </div>
+                <div class="answersContainer mb-3">
+                    <div class="answer mb-2 d-flex">
+                        <input type="text" class="form-control me-2" name="answer" placeholder="Вариант ответа" required>
+                        <button type="button" class="btn btn-outline-danger" onclick="removeAnswer(this)">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <button type="button" class="btn btn-outline-primary" onclick="addAnswer(this)">
+                        <i class="bi bi-plus-lg"></i> Добавить вариант
+                    </button>
+                    <div>
+                        <button type="button" class="btn btn-success" onclick="saveChoiceAnswer(this)">
+                            <i class="bi bi-check-lg"></i> Сохранить
+                        </button>
+                        <button type="button" class="btn btn-danger" onclick="removeQuestion(this)">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </template>
 <template id="answerTemplate">
-    <div class="answer mb-2">
-        <div class="row">
-            <div class="col-md-9">
-                <input type="text" class="form-control" name="answer" placeholder="Вариант ответа" required>
+    <div class="answer mb-2 d-flex">
+        <input type="text" class="form-control me-2" name="answer" placeholder="Вариант ответа" required>
+        <button type="button" class="btn btn-outline-danger" onclick="removeAnswer(this)">
+            <i class="bi bi-trash"></i>
+        </button>
+    </div>
+</template>
+<template id="teamQuestionTemplate">
+    <div class="question mb-3">
+        <div class="card">
+            <div class="card-header bg-light">
+                <i class="bi bi-people"></i> Настройки команды
             </div>
-            <div class="col-md-3">
-                <button type="button" class="btn btn-danger btn-sm" onclick="removeAnswer(this)">Удалить</button>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Минимальный размер команды</label>
+                        <input type="number" class="form-control" name="min_team_size" min="1" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Максимальный размер команды</label>
+                        <input type="number" class="form-control" name="max_team_size" min="1" required>
+                    </div>
+                    <div class="col-md-12 text-end">
+                        <button type="button" class="btn btn-success" onclick="saveTeamQuestion(this)">
+                            <i class="bi bi-check-lg"></i> Сохранить
+                        </button>
+                        <button type="button" class="btn btn-danger" onclick="removeQuestion(this)">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -361,92 +411,128 @@
             closeOrganizersModal();
         }
     }
+
     function addOpenQuestion() {
-    const questionTemplate = document.getElementById('openQuestionTemplate').content.cloneNode(true);
-    const questionIndex = document.querySelectorAll('.question').length; // Получаем индекс вопроса
-    questionTemplate.querySelector('.question').dataset.index = questionIndex; // Устанавливаем индекс
-    document.getElementById('questionsContainer').appendChild(questionTemplate);
-}
-    function saveOpenAnswer(button) {
-    const question = button.closest('.question');
-    const questionText = question.querySelector('input[name="question"]').value;
-    const questionIndex = question.dataset.index; // Получаем индекс вопроса
-
-    if (!questionText) {
-        alert('Пожалуйста, введите текст вопроса.');
-        return;
+        const questionTemplate = document.getElementById('openQuestionTemplate').content.cloneNode(true);
+        const questionIndex = document.querySelectorAll('.question').length;
+        questionTemplate.querySelector('.question').dataset.index = questionIndex;
+        document.getElementById('questionsContainer').appendChild(questionTemplate);
     }
 
-    // Создаем скрытое поле для текста вопроса
-    const questionInput = document.createElement('input');
-    questionInput.type = 'hidden';
-    questionInput.name = `open_questions[${questionIndex}][question]`; // Используем индекс в имени
-    questionInput.value = questionText;
-    document.querySelector('form').appendChild(questionInput);
-
-    console.log('Сохранение вопроса:', questionText);
-}
     function addChoiceQuestion() {
-    const choiceQuestionTemplate = document.getElementById('choiceQuestionTemplate').content.cloneNode(true);
-    const questionIndex = document.querySelectorAll('.question').length; // Получаем индекс вопроса
-    choiceQuestionTemplate.querySelector('.question').dataset.index = questionIndex; // Устанавливаем индекс
-    document.getElementById('questionsContainer').appendChild(choiceQuestionTemplate);
-}
-    function saveChoiceAnswer(button) {
-    const question = button.closest('.question');
-    const questionText = question.querySelector('input[name="question"]').value;
-    const answerInputs = question.querySelectorAll('input[name="answer"]');
-    const questionIndex = question.dataset.index; // Получаем индекс вопроса
-
-    const answers = [];
-
-    if (!questionText) {
-        alert('Пожалуйста, введите текст вопроса.');
-        return;
+        const choiceQuestionTemplate = document.getElementById('choiceQuestionTemplate').content.cloneNode(true);
+        const questionIndex = document.querySelectorAll('.question').length;
+        choiceQuestionTemplate.querySelector('.question').dataset.index = questionIndex;
+        document.getElementById('questionsContainer').appendChild(choiceQuestionTemplate);
     }
 
-    if (answerInputs.length === 0) {
-        alert('Пожалуйста, добавьте хотя бы один вариант ответа.');
-        return;
+    function addTeamQuestion() {
+        const teamQuestionTemplate = document.getElementById('teamQuestionTemplate').content.cloneNode(true);
+        const questionIndex = document.querySelectorAll('.question').length;
+        teamQuestionTemplate.querySelector('.question').dataset.index = questionIndex;
+        document.getElementById('questionsContainer').appendChild(teamQuestionTemplate);
     }
 
-    let hasEmptyAnswer = false;
-    answerInputs.forEach(answerInput => {
-        const answer = answerInput.value;
-        if (!answer) {
-            hasEmptyAnswer = true;
+    function saveOpenAnswer(button) {
+        const question = button.closest('.question');
+        const questionText = question.querySelector('input[name="question"]').value;
+        const questionIndex = question.dataset.index;
+
+        if (!questionText) {
+            alert('Пожалуйста, введите текст вопроса.');
+            return;
         }
-        answers.push(answer);
-    });
 
-    if (hasEmptyAnswer) {
-        alert('Пожалуйста, заполните все варианты ответа.');
-        return;
+        const questionInput = document.createElement('input');
+        questionInput.type = 'hidden';
+        questionInput.name = `open_questions[${questionIndex}][question]`;
+        questionInput.value = questionText;
+        document.querySelector('form').appendChild(questionInput);
+
+        question.querySelector('.btn-success').disabled = true;
+        question.querySelector('.btn-success').innerHTML = '<i class="bi bi-check-circle"></i> Сохранено';
     }
 
-    if (answers.length < 2) {
-        alert('Пожалуйста, добавьте минимум 2 варианта ответа.');
-        return;
+    function saveChoiceAnswer(button) {
+        const question = button.closest('.question');
+        const questionText = question.querySelector('input[name="question"]').value;
+        const answerInputs = question.querySelectorAll('input[name="answer"]');
+        const questionIndex = question.dataset.index;
+
+        if (!questionText) {
+            alert('Пожалуйста, введите текст вопроса.');
+            return;
+        }
+
+        if (answerInputs.length < 2) {
+            alert('Добавьте минимум 2 варианта ответа.');
+            return;
+        }
+
+        const answers = Array.from(answerInputs).map(input => input.value);
+        if (answers.some(answer => !answer.trim())) {
+            alert('Заполните все варианты ответа.');
+            return;
+        }
+
+        const questionInput = document.createElement('input');
+        questionInput.type = 'hidden';
+        questionInput.name = `choice_questions[${questionIndex}][question]`;
+        questionInput.value = questionText;
+        document.querySelector('form').appendChild(questionInput);
+
+        answers.forEach((answer, index) => {
+            const answerInput = document.createElement('input');
+            answerInput.type = 'hidden';
+            answerInput.name = `choice_questions[${questionIndex}][answers][${index}]`;
+            answerInput.value = answer;
+            document.querySelector('form').appendChild(answerInput);
+        });
+
+        question.querySelector('.btn-success').disabled = true;
+        question.querySelector('.btn-success').innerHTML = '<i class="bi bi-check-circle"></i> Сохранено';
     }
 
-    // Создаем скрытое поле для текста вопроса
-    const questionInput = document.createElement('input');
-    questionInput.type = 'hidden';
-    questionInput.name = `choice_questions[${questionIndex}][question]`; // Используем индекс в имени
-    questionInput.value = questionText;
-    document.querySelector('form').appendChild(questionInput);
+    function saveTeamQuestion(button) {
+        const question = button.closest('.question');
+        const minSize = question.querySelector('input[name="min_team_size"]').value;
+        const maxSize = question.querySelector('input[name="max_team_size"]').value;
+        const questionIndex = question.dataset.index;
 
-    // Создаем скрытые поля для вариантов ответа
-    answers.forEach((answer, index) => {
-        const answerInput = document.createElement('input');
-        answerInput.type = 'hidden';
-        answerInput.name = `choice_questions[${questionIndex}][answers][${index}]`; // Используем индексы в имени
-        answerInput.value = answer;
-        document.querySelector('form').appendChild(answerInput);
-    });
+        if (!minSize || !maxSize) {
+            alert('Заполните все поля.');
+            return;
+        }
 
-    console.log('Сохранение вопроса с вариантами:', questionText, answers);
-}
+        const min = parseInt(minSize);
+        const max = parseInt(maxSize);
+
+        if (min < 1) {
+            alert('Минимальный размер команды должен быть не менее 1.');
+            return;
+        }
+
+        if (max < min) {
+            alert('Максимальный размер команды не может быть меньше минимального.');
+            return;
+        }
+
+        const minSizeInput = document.createElement('input');
+        minSizeInput.type = 'hidden';
+        minSizeInput.name = `team_questions[${questionIndex}][min_size]`;
+        minSizeInput.value = min;
+        document.querySelector('form').appendChild(minSizeInput);
+
+        const maxSizeInput = document.createElement('input');
+        maxSizeInput.type = 'hidden';
+        maxSizeInput.name = `team_questions[${questionIndex}][max_size]`;
+        maxSizeInput.value = max;
+        document.querySelector('form').appendChild(maxSizeInput);
+
+        question.querySelector('.btn-success').disabled = true;
+        question.querySelector('.btn-success').innerHTML = '<i class="bi bi-check-circle"></i> Сохранено';
+    }
+
     function removeQuestion(button) {
         button.closest('.question').remove();
     }
@@ -459,8 +545,5 @@
     function removeAnswer(button) {
         button.closest('.answer').remove();
     }
-
-
-
 </script>
 {% endblock %}

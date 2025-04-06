@@ -1,0 +1,26 @@
+body{
+  background-color: #1B2D34;
+}
+.WordSection1{
+  border: 3px solid #D2CACA;
+  padding: 10px;
+  margin-left: 5%;
+  margin-right: 5%;
+  border-radius: 10px;
+  background-color: #27404A;
+  width: 90%;
+  height: auto;
+}
+* {
+  user-select: none;
+}
+.LOGO{
+float: right;
+margin-left: 100%;
+margin-right: 3%;
+}
+
+
+
+
+

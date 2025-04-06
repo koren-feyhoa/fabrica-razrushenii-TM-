@@ -5,14 +5,16 @@ from django.urls import reverse_lazy
 from django.views.generic import CreateView, DetailView, UpdateView, ListView
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, JsonResponse
+from django.contrib.auth import get_user_model
+from django.urls import reverse
+from django.db.models import Q
+from django.db import transaction
 
 from .forms import EventForm, ExtraInfoForm, ChoiceForm, UserAnswerForm
 from .models import Event, ExtraInfo, Choice, UserAnswer
 from users.models import EventOrganizer, User
 
-from django.http import JsonResponse
-from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
@@ -93,7 +95,9 @@ class EventCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
                         choice_questions[index][field] = value
                     elif field == 'answers':
                         answer_index = int(parts[3].split(']')[0])
-                        choice_questions[index]['answers'].append(value)
+                        while len(choice_questions[index]['answers']) <= answer_index:
+                            choice_questions[index]['answers'].append(None)
+                        choice_questions[index]['answers'][answer_index] = value
 
             for question_data in choice_questions.values():
                 extra_info = ExtraInfo.objects.create(
@@ -102,10 +106,30 @@ class EventCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
                     field_type='choice'
                 )
                 for answer in question_data['answers']:
-                    Choice.objects.create(
-                        extra_info=extra_info,
-                        value=answer
-                    )
+                    if answer:  # Проверяем, что ответ не пустой
+                        Choice.objects.create(
+                            extra_info=extra_info,
+                            value=answer
+                        )
+
+            # Обрабатываем настройки команд
+            team_questions = {}
+            for key, value in self.request.POST.items():
+                if key.startswith('team_questions'):
+                    parts = key.split('[')
+                    index = int(parts[1].split(']')[0])
+                    field = parts[2].split(']')[0]
+                    if index not in team_questions:
+                        team_questions[index] = {}
+                    team_questions[index][field] = value
+
+            for question_data in team_questions.values():
+                ExtraInfo.objects.create(
+                    event=event,
+                    field_type='team',
+                    min_team_size=int(question_data['min_size']),
+                    max_team_size=int(question_data['max_size'])
+                )
 
             return response
         except Exception as e:
@@ -172,6 +196,7 @@ class EventParticipantsView(LoginRequiredMixin, UserPassesTestMixin, DetailView)
         event = self.get_object()
         return event.is_user_organizer(self.request.user)
 
+
 @login_required
 def toggle_registration(request, pk):
     if request.method == 'POST':
@@ -185,91 +210,211 @@ def toggle_registration(request, pk):
         return redirect('add_events:event_detail_view', pk=pk)
     return HttpResponseForbidden()
 
-class EventDetailView(DetailView):
-    model = Event
-    template_name = 'events/event_detail_view.html'
-    context_object_name = 'event'
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        event = self.get_object()
-        user = self.request.user
+def event_detail_view(request, pk):
+    event = get_object_or_404(Event, pk=pk)
+    is_organizer = request.user.is_authenticated and request.user in event.organizers.all()
+    is_registered = request.user.is_authenticated and request.user in event.users_members.all()
+    registered_count = event.users_members.count()
+    extra_infos = event.extra_info.all()
+    
+    # Получаем список доступных пользователей для команды
+    available_users = User.objects.exclude(id=request.user.id) if request.user.is_authenticated else User.objects.none()
 
-        # Определяем роль пользователя
-        is_organizer = event.is_user_organizer(user)
-        is_registered = event.is_user_registered(user)
+    # Инициализируем форму для дополнительных вопросов
+    form = UserAnswerForm(extra_infos=extra_infos, user=request.user) if extra_infos.exists() else None
 
-        context.update({
-            'is_organizer': is_organizer,
-            'is_registered': is_registered,
-            'registered_count': event.get_registered_count(),
-            'registration_closed': event.registration_closed
-        })
+    # Debug print
+    print(f'Debug: Found {extra_infos.count()} questions')
+    for info in extra_infos:
+        print(f'Question: {info.question} (Type: {info.field_type})')
 
-        return context
+    # Если есть дополнительные вопросы и пользователь не зарегистрирован, создаем форму
+    form = None
+    if extra_infos.exists() and not is_registered and request.user.is_authenticated:
+        form = UserAnswerForm(extra_infos=extra_infos, user=request.user)
+
+    # Получаем ответы участников
+    participants_answers = {}
+    for member in event.users_members.all():
+        answers = UserAnswer.objects.filter(user=member, extra_info__event=event)
+        member_answers = []
+        for answer in answers:
+            answer_data = {
+                'question': answer.extra_info.question,
+                'field_type': answer.extra_info.field_type,
+            }
+            if answer.extra_info.field_type == 'text':
+                answer_data['answer'] = answer.answer
+            elif answer.extra_info.field_type == 'choice':
+                answer_data['answer'] = ', '.join([choice.value for choice in answer.choices.all()])
+            elif answer.extra_info.field_type == 'team':
+                answer_data['is_captain'] = answer.is_team_captain
+                answer_data['team_members'] = [member.Name_User for member in answer.team_members.all()]
+            member_answers.append(answer_data)
+        participants_answers[member.id] = member_answers
+
+    context = {
+        'event': event,
+        'is_organizer': is_organizer,
+        'is_registered': is_registered,
+        'registration_closed': event.registration_closed,
+        'registered_count': registered_count,
+        'extra_infos': extra_infos,
+        'form': form,
+        'available_users': available_users,
+        'participants_answers': participants_answers,
+    }
+    
+    # Debug print context
+    print('Context:', context)
+    return render(request, 'events/event_detail_view.html', context)
 
 
-#@login_required
-#def event_register(request, pk):
-#    if request.method == 'POST':
-#        event = get_object_or_404(Event, pk=pk)
-#        if not event.is_user_registered(request.user):
-#            if event.max_members == 0 or event.get_registered_count() < event.max_members:
-#                event.users_members.add(request.user)
-#                messages.success(request, 'Вы успешно зарегистрировались на мероприятие')
-#            else:
-#                messages.error(request, 'Достигнуто максимальное количество участников')
-#        return redirect('add_events:event_detail_view', pk=pk)
-#
-#    return HttpResponseForbidden()
 @login_required
 def event_register(request, pk):
+    print('Event register view called')
+    print('Request method:', request.method)
+    print('POST data:', request.POST)
+    
     event = get_object_or_404(Event, pk=pk)
-    extra_infos = ExtraInfo.objects.filter(event=event)
-
     if request.method == 'POST':
-        if not event.is_user_registered(request.user):
-            if event.max_members == 0 or event.get_registered_count() < event.max_members:
-                form = UserAnswerForm(request.POST, extra_infos=extra_infos)
-                if form.is_valid():
-                    event.users_members.add(request.user)
-                    for info in extra_infos:
-                        if info.question:
-                            if info.field_type == 'text':
-                                answer = form.cleaned_data.get(f'extra_{info.id}')
-                                UserAnswer.objects.create(participant=request.user, extra_info=info, answer=answer)
-                            elif info.field_type == 'choice':
-                                choice_id = form.cleaned_data.get(f'extra_{info.id}')
-                                choice = Choice.objects.get(id=choice_id)
-                                UserAnswer.objects.create(participant=request.user, extra_info=info, choice=choice)
-                    messages.success(request, 'Вы успешно зарегистрировались на мероприятие')
-                else:
-                    return render(request, 'events/event_detail_view.html', {'event': event, 'form': form, 'extra_infos': extra_infos}) # Изменено
-            else:
-                messages.error(request, 'Достигнуто максимальное количество участников')
-        return redirect('add_events:event_detail_view', pk=pk)
+        # Проверяем, что запрос является AJAX
+        if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'error': 'Invalid request'}, status=400)
+            
+        if event.registration_closed:
+            return JsonResponse({'error': 'Регистрация закрыта'}, status=400)
 
-    else:
-        if extra_infos:
-            form = UserAnswerForm(extra_infos=extra_infos)
-            return render(request, 'events/event_detail_view.html', {'event': event, 'form': form, 'extra_infos': extra_infos}) # Изменено
+        if event.max_members > 0 and event.get_registered_count() >= event.max_members:
+            return JsonResponse({'error': 'Достигнут лимит участников'}, status=400)
+
+        extra_infos = event.extra_info.all()
+        print('Extra infos:', extra_infos)
+        
+        if extra_infos.exists():
+            form = UserAnswerForm(request.POST, extra_infos=extra_infos, user=request.user)
+            print('Form is bound:', form.is_bound)
+            print('Form data:', form.data)
+            
+            if form.is_valid():
+                print('Form is valid')
+                try:
+                    # Начинаем транзакцию
+                    with transaction.atomic():
+                        for extra_info in extra_infos:
+                            if extra_info.field_type == 'team':
+                                team_members = form.cleaned_data.get(f'team_members_{extra_info.id}', [])
+                                print('Team members:', team_members)
+                                if not team_members:
+                                    # Если участники не выбраны, пропускаем создание команды
+                                    continue
+                                
+                                if team_members:  # Проверяем размер команды только если есть участники
+                                    if len(team_members) + 1 < extra_info.min_team_size:
+                                        return JsonResponse({
+                                            'error': f'В команде должно быть не менее {extra_info.min_team_size} участников (включая капитана)'
+                                        }, status=400)
+                                    
+                                    if len(team_members) + 1 > extra_info.max_team_size:
+                                        return JsonResponse({
+                                            'error': f'В команде должно быть не более {extra_info.max_team_size} участников (включая капитана)'
+                                        }, status=400)
+                                    
+                                    user_answer = UserAnswer.objects.create(
+                                        user=request.user,
+                                        extra_info=extra_info,
+                                        is_captain=True
+                                    )
+                                    user_answer.team_members.set(team_members)
+                                    print('Team answer created')
+                            else:
+                                answer = form.cleaned_data.get(f'extra_{extra_info.id}')
+                                if answer:
+                                    UserAnswer.objects.create(
+                                        user=request.user,
+                                        extra_info=extra_info,
+                                        answer=answer if isinstance(answer, str) else str(answer.id) if hasattr(answer, 'id') else str(answer)
+                                    )
+                                    print('Answer created for:', extra_info.question)
+                        
+                        event.users_members.add(request.user)
+                        print('User added to event members')
+                        
+                        return JsonResponse({
+                            'success': True,
+                            'message': 'Вы успешно зарегистрировались на мероприятие'
+                        })
+                except Exception as e:
+                    print('Error during registration:', str(e))
+                    return JsonResponse({
+                        'error': 'Произошла ошибка при регистрации. Пожалуйста, попробуйте еще раз.'
+                    }, status=500)
+            else:
+                print('Form is invalid')
+                print('Form errors:', form.errors)
+                return JsonResponse({'errors': form.errors}, status=400)
         else:
-            event.users_members.add(request.user)
-            messages.success(request, 'Вы успешно зарегистрировались на мероприятие')
-            return redirect('add_events:event_detail_view', pk=pk)
+            # Если нет дополнительных вопросов, просто регистрируем пользователя
+            try:
+                event.users_members.add(request.user)
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Вы успешно зарегистрировались на мероприятие'
+                })
+            except Exception as e:
+                print('Error during registration:', str(e))
+                return JsonResponse({
+                    'error': 'Произошла ошибка при регистрации. Пожалуйста, попробуйте еще раз.'
+                }, status=500)
+
+    return redirect('add_events:event_detail_view', pk=pk)
+
 
 def add_extra_info(request, event_id):
-    event = get_object_or_404(Event, id=event_id)
+    event = get_object_or_404(Event, pk=event_id)
+    if not event.is_user_organizer(request.user):
+        return HttpResponseForbidden('Только организаторы могут добавлять вопросы')
+
     if request.method == 'POST':
         form = ExtraInfoForm(request.POST)
         if form.is_valid():
             extra_info = form.save(commit=False)
             extra_info.event = event
+            
+            # Если это командный вопрос, проверяем размеры команды
+            if form.cleaned_data['field_type'] == 'team':
+                if not form.cleaned_data.get('min_team_size'):
+                    form.add_error('min_team_size', 'Укажите минимальный размер команды')
+                    return render(request, 'events/add_extra_info.html', {
+                        'event': event,
+                        'form': form,
+                        'title': 'Добавить дополнительный вопрос'
+                    })
+                if not form.cleaned_data.get('max_team_size'):
+                    form.add_error('max_team_size', 'Укажите максимальный размер команды')
+                    return render(request, 'events/add_extra_info.html', {
+                        'event': event,
+                        'form': form,
+                        'title': 'Добавить дополнительный вопрос'
+                    })
+
             extra_info.save()
-            return redirect('add_events:event_detail_view', pk=event_id) # Изменено
+
+            # Если это вопрос с вариантами ответа, перенаправляем на страницу добавления вариантов
+            if extra_info.field_type == 'choice':
+                return redirect('add_events:add_choice', extra_info_id=extra_info.id)
+            return redirect('add_events:event_detail_view', pk=event_id)
     else:
         form = ExtraInfoForm()
-    return render(request, 'events/event_detail_view.html', {'event': event, 'form': form}) # Изменено
+    
+    return render(request, 'events/add_extra_info.html', {
+        'event': event,
+        'form': form,
+        'title': 'Добавить дополнительный вопрос'
+    })
+
+
 @login_required
 def event_unregister(request, pk):
     if request.method == 'POST':
@@ -292,13 +437,39 @@ def event_delete(request, pk):
         return HttpResponseForbidden('У вас нет прав для удаления этого мероприятия')
     return HttpResponseForbidden()
 
+
 def get_pro_users(request):
     """Возвращает список ProUser в формате JSON"""
     pro_users = User.objects.filter(role__in=['pro_user', 'super_user']).values('id', 'Name_User')
     return JsonResponse(list(pro_users), safe=False)
 
+@login_required
+def search_users(request):
+    """Поиск пользователей по ФИО, логину или группе"""
+    query = request.GET.get('q', '')
+    if len(query) < 2:
+        return JsonResponse({'users': []})
 
+    # Исключаем текущего пользователя из результатов
+    users = User.objects.exclude(id=request.user.id).filter(
+        Q(Name_User__icontains=query) |  # Поиск по ФИО
+        Q(username__icontains=query) |   # Поиск по логину
+        Q(Number_of_group__icontains=query)  # Поиск по номеру группы
+    ).values('id', 'Name_User', 'username', 'Number_of_group')
 
+    # Преобразуем результаты в нужный формат
+    users_list = [{
+        'id': user['id'],
+        'Name_User': user['Name_User'],
+        'username': user['username'],
+        'Number_of_group': user['Number_of_group']
+    } for user in users[:10]]
+
+    # Отладочный вывод
+    print(f'Search query: {query}')
+    print(f'Found users: {users_list}')
+
+    return JsonResponse({'users': users_list})
 
 class EventReviewsView(DetailView):
     model = Event
