@@ -4,60 +4,91 @@
 <div class="container mt-4">
     <h2>{{ event.title_event }} - Участники</h2>
     
-    <div class="table-responsive">
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Имя</th>
-                    <th>Группа</th>
-                    <th>Команда</th>
-                    <th>Роль в команде</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for member in event.users_members.all %}
-                    <tr>
-                        <td>{{ member.Name_User }}</td>
-                        <td>{{ member.Number_of_group }}</td>
-                        <td>
-                            {% for answer in member.useranswer_set.all %}
-                                {% if answer.extra_info.field_type == 'team' %}
-                                    {% if answer.is_captain %}
-                                        <strong>{{ answer.team_name }}</strong><br>
-                                        1. {{ member.Name_User }} (Капитан)<br>
-                                        {% for team_member in answer.team_members.all %}
-                                            {{ forloop.counter|add:"1" }}. {{ team_member.Name_User }}<br>
-                                        {% endfor %}
-                                    {% elif answer.team_members.all %}
-                                        {% for captain_answer in answer.extra_info.useranswer_set.all %}
-                                            {% if captain_answer.is_captain and member in captain_answer.team_members.all %}
-                                                <strong>{{ captain_answer.team_name }}</strong><br>
-                                                1. {{ captain_answer.user.Name_User }} (Капитан)<br>
-                                                {% for team_member in captain_answer.team_members.all %}
-                                                    {{ forloop.counter|add:"1" }}. {{ team_member.Name_User }}<br>
-                                                {% endfor %}
-                                            {% endif %}
-                                        {% endfor %}
-                                    {% endif %}
-                                {% endif %}
+    <!-- Команды -->
+    {% if teams %}
+        {% for team_name, team_info in teams.items %}
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">Команда: {{ team_name }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>ФИО</th>
+                                    <th>VK ID</th>
+                                    <th>Статус</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Капитан -->
+                                <tr>
+                                    <td>{{ team_info.captain.Name_User }}</td>
+                                    <td>{{ team_info.captain.VK_id|default:'-' }}</td>
+                                    <td>
+                                        <span class="badge bg-primary">Капитан</span>
+                                    </td>
+                                </tr>
+                                <!-- Участники -->
+                                {% for member in team_info.members %}
+                                    <tr>
+                                        <td>{{ member.Name_User }}</td>
+                                        <td>{{ member.VK_id|default:'-' }}</td>
+                                        <td>
+                                            <span class="badge bg-secondary">Участник</span>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    {% if team_info.answers %}
+                        <div class="mt-3">
+                            <h6>Ответы команды:</h6>
+                            <ul class="list-group">
+                                {% for answer in team_info.answers %}
+                                    <li class="list-group-item">
+                                        <strong>{{ answer.question }}:</strong> {{ answer.answer }}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
+    
+    <!-- Индивидуальные участники -->
+    {% if individual_participants %}
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="card-title mb-0">Индивидуальные участники</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ФИО</th>
+                                <th>VK ID</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for participant in individual_participants %}
+                                <tr>
+                                    <td>{{ participant.Name_User }}</td>
+                                    <td>{{ participant.VK_id|default:'-' }}</td>
+                                </tr>
                             {% endfor %}
-                        </td>
-                        <td>
-                            {% for answer in member.useranswer_set.all %}
-                                {% if answer.extra_info.field_type == 'team' %}
-                                    {% if answer.is_captain %}
-                                        Капитан
-                                    {% else %}
-                                        Участник
-                                    {% endif %}
-                                {% endif %}
-                            {% endfor %}
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    {% endif %}
     
     <a href="{% url 'add_events:event_detail_view' event.pk %}" class="btn btn-secondary">Назад к мероприятию</a>
 </div>

@@ -190,11 +190,53 @@ class EventUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 class EventParticipantsView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     model = Event
     template_name = 'events/event_participants.html'
-    context_object_name = 'event'
-
+    
     def test_func(self):
         event = self.get_object()
         return event.is_user_organizer(self.request.user)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        event = self.get_object()
+        
+        # Получаем все команды для этого мероприятия
+        teams = {}
+        for answer in UserAnswer.objects.filter(
+            extra_info__event=event,
+            extra_info__field_type='team',
+            is_team_captain=True
+        ).select_related('user', 'extra_info'):
+            teams[answer.team_name] = {
+                'captain': answer.user,
+                'members': list(answer.team_members.all()),
+                'answers': []
+            }
+            
+            # Добавляем ответы капитана
+            captain_answers = UserAnswer.objects.filter(
+                user=answer.user,
+                extra_info__event=event
+            ).exclude(extra_info__field_type='team')
+            
+            for ans in captain_answers:
+                teams[answer.team_name]['answers'].append({
+                    'question': ans.extra_info.title or ans.extra_info.question,
+                    'answer': ans.answer
+                })
+        
+        # Получаем индивидуальных участников (не в командах)
+        individual_participants = event.users_members.exclude(
+            id__in=UserAnswer.objects.filter(
+                extra_info__event=event,
+                extra_info__field_type='team'
+            ).values_list('user_id', flat=True)
+        )
+        
+        context.update({
+            'teams': teams,
+            'individual_participants': individual_participants,
+        })
+        return context
 
 
 @login_required
@@ -214,25 +256,21 @@ def toggle_registration(request, pk):
 def event_detail_view(request, pk):
     event = get_object_or_404(Event, pk=pk)
     is_organizer = request.user.is_authenticated and request.user in event.organizers.all()
+    
     # Проверяем, зарегистрирован ли пользователь напрямую или как член команды
-    is_registered = event.users_members.filter(id=request.user.id).exists() or \
-                    UserAnswer.objects.filter(
-                        extra_info__event=event,
-                        team_members=request.user
-                    ).exists()
+    team_answer = UserAnswer.objects.filter(
+        extra_info__event=event,
+        team_members=request.user,
+        extra_info__field_type='team'
+    ).first()
+    
+    is_registered = event.users_members.filter(id=request.user.id).exists() or team_answer is not None
+    team_name = team_answer.team_name if team_answer else None
     registered_count = event.users_members.count()
     extra_infos = event.extra_info.all()
     
     # Получаем список доступных пользователей для команды
     available_users = User.objects.exclude(id=request.user.id) if request.user.is_authenticated else User.objects.none()
-
-    # Инициализируем форму для дополнительных вопросов
-    form = UserAnswerForm(extra_infos=extra_infos, user=request.user) if extra_infos.exists() else None
-
-    # Debug print
-    print(f'Debug: Found {extra_infos.count()} questions')
-    for info in extra_infos:
-        print(f'Question: {info.question} (Type: {info.field_type})')
 
     # Если есть дополнительные вопросы и пользователь не зарегистрирован, создаем форму
     form = None
@@ -241,23 +279,58 @@ def event_detail_view(request, pk):
 
     # Получаем ответы участников
     participants_answers = {}
-    for member in event.users_members.all():
-        answers = UserAnswer.objects.filter(user=member, extra_info__event=event)
-        member_answers = []
+    
+    print("\nDebug: Starting team processing...")
+    
+    # Сначала получаем все команды
+    team_answers = UserAnswer.objects.filter(
+        extra_info__event=event,
+        extra_info__field_type='team'
+    ).select_related('user', 'extra_info')
+    
+    print(f"Debug: Found {team_answers.count()} team answers")
+    
+    # Группируем ответы по командам
+    for answer in team_answers:
+        print(f"\nDebug: Processing answer for user {answer.user.Name_User}")
+        print(f"Debug: Team name: {answer.team_name}")
+        print(f"Debug: Is captain: {answer.is_team_captain}")
+        print(f"Debug: Team members: {[m.Name_User for m in answer.team_members.all()]}")
+        
+        if answer.user.id not in participants_answers:
+            participants_answers[answer.user.id] = []
+            
+        answer_data = {
+            'field_type': 'team',
+            'is_team_captain': answer.is_team_captain,
+            'team_name': answer.team_name,
+            'team_members': list(answer.team_members.all())
+        }
+        participants_answers[answer.user.id].append(answer_data)
+        
+        # Добавляем ответы на другие вопросы для капитана
+        if answer.is_team_captain:
+            other_answers = UserAnswer.objects.filter(
+                user=answer.user,
+                extra_info__event=event
+            ).exclude(extra_info__field_type='team')
+            
+            print(f"Debug: Found {other_answers.count()} other answers for captain")
+            
+            for other_answer in other_answers:
+                answer_data = {
+                    'field_type': other_answer.extra_info.field_type,
+                    'question': other_answer.extra_info.question,
+                    'answer': other_answer.answer,
+                    'team_name': answer.team_name
+                }
+                participants_answers[answer.user.id].append(answer_data)
+    
+    print("\nDebug: Final participants_answers:")
+    for user_id, answers in participants_answers.items():
+        print(f"User ID {user_id}:")
         for answer in answers:
-            answer_data = {
-                'question': answer.extra_info.question,
-                'field_type': answer.extra_info.field_type,
-            }
-            if answer.extra_info.field_type == 'text':
-                answer_data['answer'] = answer.answer
-            elif answer.extra_info.field_type == 'choice':
-                answer_data['answer'] = ', '.join([choice.value for choice in answer.choices.all()])
-            elif answer.extra_info.field_type == 'team':
-                answer_data['is_captain'] = answer.is_team_captain
-                answer_data['team_members'] = [member.Name_User for member in answer.team_members.all()]
-            member_answers.append(answer_data)
-        participants_answers[member.id] = member_answers
+            print(f"  - {answer}")
 
     context = {
         'event': event,
@@ -269,10 +342,9 @@ def event_detail_view(request, pk):
         'form': form,
         'available_users': available_users,
         'participants_answers': participants_answers,
+        'team_name': team_name
     }
     
-    # Debug print context
-    print('Context:', context)
     return render(request, 'events/event_detail_view.html', context)
 
 
@@ -307,15 +379,16 @@ def event_register(request, pk):
                 try:
                     # Начинаем транзакцию
                     with transaction.atomic():
+                        # Регистрируем текущего пользователя
+                        event.users_members.add(request.user)
+                        
                         for extra_info in extra_infos:
                             if extra_info.field_type == 'team':
-                                team_members = form.cleaned_data.get(f'team_members_{extra_info.id}', [])
-                                print('Team members:', team_members)
-                                if not team_members:
-                                    # Если участники не выбраны, пропускаем создание команды
-                                    continue
-                                
                                 team_name = form.cleaned_data.get(f'team_name_{extra_info.id}')
+                                team_members = form.cleaned_data.get(f'team_members_{extra_info.id}', [])
+                                print(f'Team name: {team_name}')
+                                print(f'Team members: {team_members}')
+                                
                                 if team_members:  # Проверяем размер команды только если есть участники
                                     if len(team_members) + 1 < extra_info.min_team_size:
                                         return JsonResponse({
@@ -327,26 +400,30 @@ def event_register(request, pk):
                                             'error': f'В команде должно быть не более {extra_info.max_team_size} участников (включая капитана)'
                                         }, status=400)
                                     
-                                    # Создаем ответ для команды
-                                    user_answer = UserAnswer.objects.create(
+                                    # Создаем ответ для капитана команды
+                                    captain_answer = UserAnswer.objects.create(
                                         user=request.user,
                                         extra_info=extra_info,
-                                        is_captain=True,
+                                        is_team_captain=True,
                                         team_name=team_name
                                     )
-                                    user_answer.team_members.set(team_members)
-                                    print('Team answer created')
+                                    # Добавляем капитана в список участников команды
+                                    all_team_members = [request.user] + list(team_members)
+                                    captain_answer.team_members.set(all_team_members)
+                                    print('Captain answer created')
                                     
-                                    # Регистрируем всех участников команды
+                                    # Регистрируем участников команды
                                     for member in team_members:
                                         event.users_members.add(member)
-                                        # Создаем ответы для остальных вопросов
-                                        for other_info in extra_infos:
-                                            if other_info.id != extra_info.id:
-                                                UserAnswer.objects.create(
-                                                    user=member,
-                                                    extra_info=other_info
-                                                )
+                                        # Создаем ответ для участника команды
+                                        member_answer = UserAnswer.objects.create(
+                                            user=member,
+                                            extra_info=extra_info,
+                                            is_team_captain=False,
+                                            team_name=team_name
+                                        )
+                                        member_answer.team_members.set(all_team_members)
+                                        print(f'Member answer created for {member}')
                             else:
                                 answer = form.cleaned_data.get(f'extra_{extra_info.id}')
                                 if answer:
@@ -462,6 +539,9 @@ def get_pro_users(request):
     pro_users = User.objects.filter(role__in=['pro_user', 'super_user']).values('id', 'Name_User')
     return JsonResponse(list(pro_users), safe=False)
 
+from django.views.decorators.csrf import csrf_exempt
+
+@csrf_exempt
 @login_required
 def search_users(request):
     """Поиск пользователей по ФИО, логину или группе"""
