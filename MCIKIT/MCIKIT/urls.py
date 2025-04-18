@@ -29,8 +29,8 @@ urlpatterns = [
     path('users/', include('users.urls', namespace="users")),
     path('',include('start_page.urls')),
     path('accounts', include('django.contrib.auth.urls')),
-path('events/', include('add_event.urls', namespace='add_events')),
-] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    path('add_event/', include('add_event.urls', namespace='add_events')),
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+#if settings.DEBUG:
+#    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
