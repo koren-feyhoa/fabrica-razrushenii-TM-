@@ -8,8 +8,9 @@ from django.db.models import Q
 
 def main(request):
     # Получаем актуальные мероприятия (которые еще не закончились)
-    today = timezone.now().date()
-    current_time = timezone.now().time()
+    now = timezone.localtime(timezone.now())
+    today = now.date()
+    current_time = now.time()
     
     # Фильтруем мероприятия, которые еще не закончились
     upcoming_events = Event.objects.filter(
@@ -23,7 +24,10 @@ def main(request):
     # Создаем словарь, где ключ - дата, значение - список мероприятий на эту дату
     events_by_date = {}
     for event in events:
-        date_str = event.event_date.isoformat()
+        # Конвертируем дату события в локальное время
+        local_date = timezone.localtime(timezone.make_aware(datetime.combine(event.event_date, event.event_time))).date()
+        date_str = local_date.isoformat()
+        
         if date_str not in events_by_date:
             events_by_date[date_str] = []
         
@@ -31,7 +35,7 @@ def main(request):
             'id': event.id,
             'title': event.title_event,
             'description': event.description_Event,
-            'date': event.event_date.strftime('%d.%m.%Y'),
+            'date': local_date.strftime('%d.%m.%Y'),
             'time': event.event_time.strftime('%H:%M'),
         })
     
