@@ -233,7 +233,8 @@
                     dayElement.classList.add('other-month');
                 }
                 
-                const dateStr = currentDay.toISOString().split('T')[0];
+                // Формируем дату в локальном часовом поясе
+                const dateStr = currentDay.toLocaleDateString('sv').split(' ')[0]; // Формат YYYY-MM-DD
                 if (events[dateStr]) {
                     dayElement.classList.add('has-event');
                     dayElement.setAttribute('data-date', dateStr);
