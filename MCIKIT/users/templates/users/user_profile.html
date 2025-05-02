@@ -1,306 +1,589 @@
-{% block content %}
-<div class="container mt-4">
-    <h2>Профиль пользователя</h2>
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Профиль пользователя</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.2/css/all.css">
+    <style>
+        body {
+            background-color: #1a2631 !important;
+            color: #ffffff !important;
+            font-family: Roboto, sans-serif;
+        }
 
-    <div class="user-info mb-4">
-        <h3>{{ user.Name_User }}</h3>
-        <p>{{ user.Number_of_group }}</p>
-        <p>{{ user.username }}</p>
+        .logo {
+            height: 186px;
+            margin-top: 5px 0;
+        }
 
-        {% if user.Avatar %}
-        <div class="avatar-container">
-            <img class="avatar-img" src="{{user.Avatar.url}}" alt="Avatar">
+        .home-link {
+            display: block;
+            text-align: center;
+            color: #ffffff;
+            text-decoration: none;
+            margin-bottom: 20px;
+        }
+
+        .home-link:hover {
+            text-decoration: underline;
+        }
+
+        .profile-container {
+            background-color: #243B44;
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 30px;
+        }
+
+        .profile-image {
+            width: 180px;
+            height: 180px;
+            background-color: #1a2631;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .profile-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+
+        .carousel-inner {
+            padding: 40px;
+            display: flex;
+            flex-wrap: nowrap;
+            overflow: hidden;
+        }
+
+        .carousel-item {
+            display: block;
+            flex: 0 0 auto;
+        }
+
+        .event-card {
+            background-color: #1a2631;
+            border-radius: 15px;
+            overflow: hidden;
+            height: 100%;
+            margin: 0 10px;
+        }
+
+        .event-image {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+        }
+
+        .event-info {
+            padding: 15px;
+        }
+
+        .btn-review, .btn-organize {
+            background-color: transparent;
+            border: 1px solid #889199;
+            color: #ffffff;
+            border-radius: 20px;
+            padding: 8px 16px;
+            width: 100%;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+
+        .btn-review:hover, .btn-organize:hover {
+            background-color: #283845;
+        }
+
+        .carousel-control-prev, .carousel-control-next {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #1a2631;
+            border: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1;
+        }
+
+        .nav-tabs .nav-link {
+            background-color: #243B44;
+            color: #ffffff;
+            border: 1px solid #889199;
+            border-bottom: none;
+            border-radius: 10px 10px 0 0;
+        }
+
+        .nav-tabs .nav-link.active {
+            background-color: #283845;
+            color: #ffffff;
+        }
+
+        .tab-content {
+            background-color: #243B44;
+            border-radius: 0 0 10px 10px;
+            padding: 15px;
+        }
+
+        .modal-content {
+            background-color: #243B44 !important;
+            border-radius: 15px;
+            border: none;
+        }
+
+        .modal-body {
+            padding: 25px;
+        }
+
+        .form-control {
+            background-color: #1a2631 !important;
+            border: 1px solid #384856;
+            color: white !important;
+            border-radius: 10px;
+        }
+
+        .form-control::placeholder {
+            color: #889199;
+        }
+
+        .form-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #ffffff;
+        }
+
+        .star-rating {
+            display: flex;
+            gap: 10px;
+            font-size: 24px;
+            color: #889199;
+            margin-top: 10px;
+        }
+
+        .fa-star {
+            cursor: pointer;
+        }
+
+        .fa-star.active {
+            color: #ffffff;
+        }
+
+        .btn-submit {
+            background-color: #283845;
+            color: white;
+            border-radius: 20px;
+            border: none;
+        }
+
+        .success-icon {
+            font-size: 40px;
+            color: #4BB543;
+        }
+
+        .rating-display {
+            color: #ffffff;
+            font-size: 20px;
+            margin-top: 10px;
+        }
+
+        .btn-outline-secondary {
+            color: #ffffff;
+            border-color: #889199;
+        }
+
+        .btn-outline-secondary:hover {
+            background-color: #283845;
+        }
+
+        h2 {
+            font-size: 18px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .no-events {
+            text-align: center;
+            padding: 20px;
+            font-size: 20px;
+        }
+
+        .col{
+            font-size: 18px;
+        }
+
+        .col-auto{
+            fony-size: 14px;
+        }
+
+        /* Responsive carousel */
+        @media (min-width: 1200px) {
+            .carousel-inner .carousel-item {
+                flex: 0 0 33.333333%;
+                max-width: 33.333333%;
+            }
+        }
+
+        @media (min-width: 768px) and (max-width: 1199px) {
+            .carousel-inner .carousel-item {
+                flex: 0 0 50%;
+                max-width: 50%;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .carousel-inner .carousel-item {
+                flex: 0 0 100%;
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body class="bg-dark text-light">
+    <div class="container py-4">
+        <!-- Header with logo -->
+        <header class="text-center mb-5">
+            <img src="/static/users/image/logo.png" alt="Логотип" class="logo">
+            <a href="{% url 'start_page' %}" class="home-link">Главная страница</a> 
+        </header>
+
+        <!-- User Profile Section -->
+        <div class="profile-container mb-5">
+            <div class="row align-items-center">
+                <div class="col-auto">
+                    <div class="profile-image">
+                        {% if user.Avatar %}
+                            <img src="{{ user.Avatar.url }}" alt="Avatar">
+                        {% else %}
+                            <i class="fas fa-plus"></i>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col">
+                    <h3>{{ user.Name_User }}</h3>
+                    <p class="mb-1">{{ user.Number_of_group }}</p>
+                    <p>{{ user.username }}</p>
+                </div>
+                <div class="col-auto">
+                    <a href="{% url 'users:user_settings' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-cog"></i>
+                    </a>
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-outline-secondary">
+                        Выйти из аккаунта <i class="fas fa-sign-out-alt ms-2"></i>
+                    </button>
+                </div>
+            </div>
         </div>
-        {% else %}
-        <p>Фотография не загружена.</p>
-        {% endif %}
 
-        <div class="mt-3">
-            <a href="{% url 'users:user_settings' %}" class="btn btn-outline-primary me-2">Настройки</a>
+        <!-- Event Tabs -->
+        <ul class="nav nav-tabs justify-content-center mb-3" id="eventTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="attended-tab" data-bs-toggle="tab" data-bs-target="#attended" type="button" role="tab" aria-controls="attended" aria-selected="true">Посещенные мероприятия</button>
+            </li>
             {% if user.is_pro_user or user.is_super_user %}
-            <a href="{% url 'add_events:event_create' %}" class="btn btn-primary">Организовать мероприятие</a>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="organized-tab" data-bs-toggle="tab" data-bs-target="#organized" type="button" role="tab" aria-controls="organized" aria-selected="false">Организованные мероприятия</button>
+                </li>
             {% endif %}
-        </div>
-    </div>
+        </ul>
 
-    {% if user.is_pro_user or user.is_super_user %}
-    <!-- Кнопки переключения -->
-    <div class="mb-4">
-        <button class="btn btn-primary me-2" onclick="showEvents('attended')" id="attendedBtn">Посещенные мероприятия</button>
-        <button class="btn btn-outline-primary" onclick="showEvents('organized')" id="organizedBtn">Организованные мероприятия</button>
-    </div>
-
-    <!-- Посещенные мероприятия -->
-    <div id="attendedEvents" class="events-section">
-        <div class="row g-4">
-            {% for event_data in attended_events %}
-                <div class="col-md-3">
-                    <div class="card h-100">
-                        <div class="event-img-container">
-                            {% if event_data.event.Event_photo %}
-                                <img src="{{ event_data.event.Event_photo.url }}" class="card-img-top" alt="{{ event_data.event.title_event }}">
-                            {% endif %}
-                        </div>
-                        <div class="card-body">
-                            <h6 class="card-title">{{ event_data.event.title_event }}</h6>
-                            <p class="card-text small">
-                                <strong>Дата:</strong> {{ event_data.event.event_date }}<br>
-                                <strong>Время:</strong> {{ event_data.event.event_time }}
-                            </p>
-
-                            {% if event_data.is_past %}
-                                {% if event_data.rating %}
-                                    <div class="rating-display">
-                                        <p class="mb-1"><strong>Ваша оценка: {{ event_data.rating.rating }}</strong></p>
-                                        <div class="stars">
-                                            {% for i in "12345" %}
-                                                <span class="star {% if i|add:"0" <= event_data.rating.rating %}active{% endif %}">★</span>
-                                            {% endfor %}
+        <div class="tab-content">
+            <!-- Attended Events Tab -->
+            <div class="tab-pane fade show active" id="attended" role="tabpanel" aria-labelledby="attended-tab">
+                {% if attended_events %}
+                    <div id="attendedCarousel" class="carousel slide" data-bs-ride="false" data-bs-interval="false">
+                        <div class="carousel-inner">
+                            {% for event_data in attended_events %}
+                                <div class="carousel-item {% if forloop.counter0 < 3 %}active{% endif %}">
+                                    <div class="event-card">
+                                        <img src="{{ event_data.event.Event_photo.url }}" alt="{{ event_data.event.title_event }}" class="event-image">
+                                        <div class="event-info">
+                                            <div class="d-flex justify-content-between mb-2">
+                                                <div>
+                                                    <i class="far fa-calendar"></i> {{ event_data.event.event_date }}
+                                                </div>
+                                                <div>
+                                                    <i class="far fa-clock"></i> {{ event_data.event.event_time }}
+                                                </div>
+                                            </div>
+                                            <h5>{{ event_data.event.title_event }}</h5>
+                                            {% if event_data.is_past %}
+                                                {% if event_data.rating %}
+                                                    <div class="rating-display">
+                                                        {% for i in "12345" %}
+                                                            <i class="{% if i|add:'0' <= event_data.rating.rating %}fas{% else %}far{% endif %} fa-star"></i>
+                                                        {% endfor %}
+                                                    </div>
+                                                {% else %}
+                                                    <button type="button" class="btn btn-review rate-event-btn"
+                                                            data-event-id="{{ event_data.event.id }}">
+                                                        Оставить отзыв
+                                                    </button>
+                                                {% endif %}
+                                            {% endif %}
                                         </div>
                                     </div>
-                                {% else %}
-                                    <button type="button" class="btn btn-sm btn-outline-primary rate-event-btn"
-                                            data-event-id="{{ event_data.event.id }}"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#ratingModal">
-                                        Оценить мероприятие
-                                    </button>
-                                {% endif %}
-                            {% endif %}
+                                </div>
+                            {% endfor %}
                         </div>
+                        <button class="carousel-control-prev" type="button" data-bs-target="#attendedCarousel" data-bs-slide="prev">
+                            <span class="nav-btn"><i class="fas fa-chevron-left"></i></span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#attendedCarousel" data-bs-slide="next">
+                            <span class="nav-btn"><i class="fas fa-chevron-right"></i></span>
+                        </button>
                     </div>
-                </div>
-            {% endfor %}
-        </div>
-    </div>
+                {% else %}
+                    <div class="no-events">Посещенных мероприятий нет</div>
+                {% endif %}
+            </div>
 
-    <!-- Организованные мероприятия -->
-    <div id="organizedEvents" class="events-section" style="display: none;">
-        <div class="row g-4">
-            {% for event in organized_events %}
-                <div class="col-md-3">
-                    <div class="card h-100">
-                        <div class="event-img-container">
-                            {% if event.Event_photo %}
-                                <img src="{{ event.Event_photo.url }}" class="card-img-top" alt="{{ event.title_event }}">
-                            {% endif %}
-                        </div>
-                        <div class="card-body">
-                            <h6 class="card-title">{{ event.title_event }}</h6>
-                            <p class="card-text small">
-                                <strong>Дата:</strong> {{ event.event_date }}<br>
-                                <strong>Время:</strong> {{ event.event_time }}<br>
-                                <strong>Средняя оценка:</strong> {{ event.average_rate|floatformat:1 }}
-                                <a href="{% url 'add_events:event_reviews' event.pk %}" class="btn btn-primary">Отзывы</a>
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            {% endfor %}
-        </div>
-    </div>
-    {% endif %}
-
-    <!-- Модальное окно для оценки -->
-    <div class="modal fade" id="ratingModal" tabindex="-1" aria-labelledby="ratingModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header border-0">
-                    <h5 class="modal-title" id="ratingModalLabel">Оценить мероприятие</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body px-4">
-                    <form id="ratingForm">
-                        <div class="text-center mb-4">
-                            <label class="form-label h5 mb-3">Как бы вы оценили мероприятие?</label>
-                            <div class="rating-large">
-                                {% for i in "54321" %}
-                                    <input type="radio" name="rating" value="{{ i }}" id="star{{ i }}">
-                                    <label for="star{{ i }}">★</label>
+            <!-- Organized Events Tab -->
+            {% if user.is_pro_user or user.is_super_user %}
+                <div class="tab-pane fade" id="organized" role="tabpanel" aria-labelledby="organized-tab">
+                    {% if organized_events %}
+                        <div id="organizedCarousel" class="carousel slide" data-bs-ride="false" data-bs-interval="false">
+                            <div class="carousel-inner">
+                                {% for event in organized_events %}
+                                    <div class="carousel-item {% if forloop.counter0 < 3 %}active{% endif %}">
+                                        <div class="event-card">
+                                            <img src="{{ event.Event_photo.url }}" alt="{{ event.title_event }}" class="event-image">
+                                            <div class="event-info">
+                                                <div class="d-flex justify-content-between mb-2">
+                                                    <div>
+                                                        <i class="far fa-calendar"></i> {{ event.event_date }}
+                                                    </div>
+                                                    <div>
+                                                        <i class="far fa-clock"></i> {{ event.event_time }}
+                                                    </div>
+                                                </div>
+                                                <h5>{{ event.title_event }}</h5>
+                                                <p>Средняя оценка: {{ event.average_rate|floatformat:1 }}</p>
+                                                <a href="{% url 'add_events:event_reviews' event.pk %}" class="btn btn-review">Отзывы</a>
+                                            </div>
+                                        </div>
+                                    </div>
                                 {% endfor %}
                             </div>
+                            <button class="carousel-control-prev" type="button" data-bs-target="#organizedCarousel" data-bs-slide="prev">
+                                <span class="nav-btn"><i class="fas fa-chevron-left"></i></span>
+                            </button>
+                            <button class="carousel-control-next" type="button" data-bs-target="#organizedCarousel" data-bs-slide="next">
+                                <span class="nav-btn"><i class="fas fa-chevron-right"></i></span>
+                            </button>
                         </div>
-                        <div class="mb-3">
-                            <label for="likes" class="form-label">Что вам понравилось</label>
-                            <textarea class="form-control" id="likes" name="likes" rows="3"
-                                    placeholder="Расскажите, что было особенно хорошо (необязательно)"></textarea>
+                        <div class="text-center mt-4">
+                            <a href="{% url 'add_events:event_create' %}" class="btn btn-organize">Организовать мероприятие</a>
                         </div>
-                        <div class="mb-3">
-                            <label for="dislikes" class="form-label">Что вам не понравилось</label>
-                            <textarea class="form-control" id="dislikes" name="dislikes" rows="3"
-                                    placeholder="Расскажите, что можно улучшить (необязательно)"></textarea>
+                    {% else %}
+                        <div class="no-events">Организованных мероприятий нет</div>
+                        <div class="text-center mt-4">
+                            <a href="{% url 'add_events:event_create' %}" class="btn btn-organize">Организовать мероприятие</a>
                         </div>
-                    </form>
+                    {% endif %}
                 </div>
-                <div class="modal-footer border-0 justify-content-center">
-                    <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Отмена</button>
-                    <button type="button" class="btn btn-primary px-4" id="submitRating">Сохранить</button>
+            {% endif %}
+        </div>
+
+        <!-- Review Modal -->
+        <div class="modal fade" id="ratingModal" tabindex="-1" aria-labelledby="ratingModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content bg-dark text-light">
+                    <div class="modal-body">
+                        <h5 class="modal-title mb-4">Отзыв</h5>
+                        <form id="ratingForm">
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="far fa-thumbs-up"></i> Что вам понравилось?
+                                </label>
+                                <textarea class="form-control bg-dark text-light" rows="2" name="likes" placeholder="Напишите свой ответ..."></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="far fa-thumbs-down"></i> Что вам не понравилось?
+                                </label>
+                                <textarea class="form-control bg-dark text-light" rows="2" name="dislikes" placeholder="Напишите свой ответ..."></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="far fa-star"></i> Как бы вы оценили мероприятие?
+                                </label>
+                                <div class="star-rating">
+                                    <i class="far fa-star" data-rating="1"></i>
+                                    <i class="far fa-star" data-rating="2"></i>
+                                    <i class="far fa-star" data-rating="3"></i>
+                                    <i class="far fa-star" data-rating="4"></i>
+                                    <i class="far fa-star" data-rating="5"></i>
+                                </div>
+                                <input type="hidden" name="rating" id="ratingValue">
+                            </div>
+                            <button type="submit" class="btn btn-submit w-100 mt-3">Оценить</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Success Modal -->
+        <div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-sm">
+                <div class="modal-content bg-dark text-light text-center">
+                    <div class="modal-body py-4">
+                        <div class="success-icon mb-3">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <p class="mb-0">Спасибо за оставленный отзыв!</p>
+                        <p class="mb-0">Нам очень важно ваше мнение</p>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-{% block extra_css %}
-<style>
-    .event-img-container {
-        height: 150px;
-        overflow: hidden;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get modals
+            const ratingModal = new bootstrap.Modal(document.getElementById('ratingModal'));
+            const successModal = new bootstrap.Modal(document.getElementById('successModal'));
 
-    .event-img-container img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
+            // Current event being reviewed
+            let currentEventId = null;
+            let currentEventBtn = null;
 
-    .avatar-container {
-        width: 100px;
-        height: 100px;
-        overflow: hidden;
-        border-radius: 50%;
-    }
+            // Star rating functionality
+            const stars = document.querySelectorAll('.star-rating .fa-star');
+            let selectedRating = 0;
 
-    .avatar-img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
+            stars.forEach(star => {
+                star.addEventListener('mouseover', function() {
+                    const rating = this.dataset.rating;
+                    highlightStars(rating);
+                });
 
-    .rating-large {
-        display: flex;
-        flex-direction: row-reverse;
-        justify-content: center;
-    }
+                star.addEventListener('mouseout', function() {
+                    highlightStars(selectedRating);
+                });
 
-    .rating-large input {
-        display: none;
-    }
+                star.addEventListener('click', function() {
+                    selectedRating = this.dataset.rating;
+                    document.getElementById('ratingValue').value = selectedRating;
+                    highlightStars(selectedRating);
+                });
+            });
 
-    .rating-large label {
-        cursor: pointer;
-        font-size: 40px;
-        color: #ddd;
-        padding: 5px;
-    }
-
-    .rating-large label:hover,
-    .rating-large label:hover ~ label,
-    .rating-large input:checked ~ label {
-        color: #ffd700;
-    }
-
-    .stars {
-        display: inline-block;
-    }
-
-    .star {
-        color: #ddd;
-        font-size: 20px;
-    }
-
-    .star.active {
-        color: #ffd700;
-    }
-</style>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-function showEvents(type) {
-    // Скрываем все секции
-    document.querySelectorAll('.events-section').forEach(section => {
-        section.style.display = 'none';
-    });
-
-    // Сбрасываем стили всех кнопок
-    document.getElementById('attendedBtn').classList.remove('btn-primary');
-    document.getElementById('attendedBtn').classList.add('btn-outline-primary');
-    document.getElementById('organizedBtn').classList.remove('btn-primary');
-    document.getElementById('organizedBtn').classList.add('btn-outline-primary');
-
-    // Показываем выбранную секцию и активируем соответствующую кнопку
-    if (type === 'attended') {
-        document.getElementById('attendedEvents').style.display = 'block';
-        document.getElementById('attendedBtn').classList.remove('btn-outline-primary');
-        document.getElementById('attendedBtn').classList.add('btn-primary');
-    } else {
-        document.getElementById('organizedEvents').style.display = 'block';
-        document.getElementById('organizedBtn').classList.remove('btn-outline-primary');
-        document.getElementById('organizedBtn').classList.add('btn-primary');
-    }
-}
-
-// При загрузке страницы показываем посещенные мероприятия
-document.addEventListener('DOMContentLoaded', function() {
-    showEvents('attended');
-
-    let currentEventId = null;
-
-    // Открытие модального окна
-    document.querySelectorAll('.rate-event-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            currentEventId = this.dataset.eventId;
-            document.getElementById('ratingForm').reset();
-        });
-    });
-
-    // Отправка оценки
-    document.getElementById('submitRating').addEventListener('click', function() {
-        const form = document.getElementById('ratingForm');
-        const rating = form.querySelector('input[name="rating"]:checked')?.value;
-        const likes = form.querySelector('#likes').value;
-        const dislikes = form.querySelector('#dislikes').value;
-
-        if (!rating) {
-            alert('Пожалуйста, поставьте оценку');
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append('rating', rating);
-        formData.append('likes', likes);
-        formData.append('dislikes', dislikes);
-
-        fetch(`/users/rate_event/${currentEventId}/`, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken')
+            function highlightStars(rating) {
+                stars.forEach(star => {
+                    const starRating = star.dataset.rating;
+                    if (starRating <= rating) {
+                        star.classList.remove('far');
+                        star.classList.add('fas', 'active');
+                    } else {
+                        star.classList.remove('fas', 'active');
+                        star.classList.add('far');
+                    }
+                });
             }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert(data.error || 'Произошла ошибка при сохранении оценки');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Произошла ошибка при сохранении оценки');
-        });
-    });
 
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
+            // Open modal and reset form
+            document.querySelectorAll('.rate-event-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    currentEventId = this.dataset.eventId;
+                    currentEventBtn = this;
+                    document.getElementById('ratingForm').reset();
+                    selectedRating = 0;
+                    highlightStars(0);
+                    ratingModal.show();
+                });
+            });
+
+            // Form submission
+            const ratingForm = document.getElementById('ratingForm');
+            ratingForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const rating = document.getElementById('ratingValue').value;
+                const likes = ratingForm.querySelector('textarea[name="likes"]').value;
+                const dislikes = ratingForm.querySelector('textarea[name="dislikes"]').value;
+
+                if (!rating) {
+                    alert('Пожалуйста, поставьте оценку');
+                    return;
                 }
+
+                const formData = new FormData();
+                formData.append('rating', rating);
+                formData.append('likes', likes);
+                formData.append('dislikes', dislikes);
+
+                fetch(`/users/rate_event/${currentEventId}/`, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        ratingModal.hide();
+                        setTimeout(() => {
+                            successModal.show();
+                            setTimeout(() => {
+                                successModal.hide();
+                                // Replace the "Leave review" button with star rating
+                                if (currentEventBtn) {
+                                    const eventCard = currentEventBtn.closest('.event-info');
+                                    const ratingDisplay = document.createElement('div');
+                                    ratingDisplay.className = 'rating-display';
+                                    for (let i = 1; i <= 5; i++) {
+                                        const starIcon = document.createElement('i');
+                                        starIcon.className = i <= selectedRating ? 'fas fa-star' : 'far fa-star';
+                                        ratingDisplay.appendChild(starIcon);
+                                    }
+                                    eventCard.removeChild(currentEventBtn);
+                                    eventCard.appendChild(ratingDisplay);
+                                    selectedRating = 0;
+                                    highlightStars(0);
+                                }
+                            }, 2000);
+                        }, 300);
+                    } else {
+                        alert(data.error || 'Произошла ошибка при сохранении оценки');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Произошла ошибка при сохранении оценки');
+                });
+            });
+
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
             }
-        }
-        return cookieValue;
-    }
-});
-</script>
-{% endblock %}
-{% endblock %}
+        });
+    </script>
+</body>
+</html>
