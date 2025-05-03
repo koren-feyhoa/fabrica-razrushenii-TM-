@@ -1,16 +1,531 @@
 {% extends 'users/layout.html' %}
 
 {% block content %}
-<h2>Настройки аккаунта</h2>
-<form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form.as_p }}
-    {% if user.Avatar %}
-        <p><img class="img-article-left thumb" src="{{user.Avatar.url}}"></p>
-    {% else %}
-        <p>Фотография не загружена.</p>
-    {% endif %}
-    <button type="submit" class="btn btn-primary">Сохранить изменения</button>
-    <button type="button" class="btn btn-secondary" onclick="window.location.href='{% url 'users:user_profile' %}'">Отмена</button>
-</form>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Настройки профиля</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.2/css/all.css">
+    <style>
+        body {
+            font-family: Roboto, sans-serif;
+            background-color: #1B2D34;
+            color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 80vh;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .logo-container {
+            margin-bottom: 50px;
+        }
+        
+        .logo {
+            max-width: 186px;
+            height: auto;
+        }
+        
+        .profile-card {
+            background-color: #243B44;
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            color: #e0e0e0;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        .card-header {
+            background-color: #243B44;
+            border-bottom: 1px solid #2c3e50;
+            padding: 20px;
+            border-radius: 15px 15px 0 0 !important;
+        }
+        
+        .back-btn {
+            color: #e0e0e0;
+            text-decoration: none;
+        }
+        
+        .arrow-left {
+            color: #e0e0e0;
+        }
+        
+        h4 {
+            margin: 0;
+            font-weight: normal;
+        }
+        
+        .card-body {
+            padding: 30px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: rgba(255, 255, 255, 0.88);
+            font-size: 0.9rem;
+        }
+
+        .input-group-text {
+            background-color: #1B2D34;
+            border: none;
+            color: rgba(255, 255, 255, 0.88);
+        }
+        
+        .form-control {
+            background-color: #1B2D34;
+            border: none;
+            color: #ffffff;
+            padding: 10px 15px;
+            outline: none;
+        }
+        
+        .form-control:focus {
+            background-color: #1B2D34;
+            border-color: #3498db;
+            box-shadow: none;
+            color: #e0e0e0;
+        }
+        
+        .image-upload-container {
+            margin-top: 0;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+        
+        .image-upload {
+            width: 140px;
+            height: 140px;
+            background-color: #1B2D34;
+            border: 1px solid #2c3e50;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            margin-top: 32px;
+            overflow: hidden; /* Обрезка изображения по границам */
+        }
+    
+        #avatarPreview {
+            width: 100%; /* Изображение занимает всю ширину контейнера */
+            height: 100%; /* Изображение занимает всю высоту контейнера */
+            object-fit: cover; /* Сохраняет пропорции изображения, заполняя контейнер */
+            border-radius: 10px; /* Скругленные углы */
+        }
+    
+        .d-none {
+            display: none !important;
+        }
+        
+        .plus-icon {
+            color: rgba(255, 255, 255, 0.88);
+            font-size: 32px;
+            font-weight: bold;
+        }
+        
+        .btn-outline-secondary,
+        .save-btn {
+            background-color: #1B2D34;
+            border: none;
+            color: #ffffff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        .btn-outline-secondary:hover,
+        .save-btn:hover {
+            background-color: #243642;
+            color: #ffffff;
+        }
+        
+        .btn-outline-secondary:active,
+        .btn-outline-secondary:focus {
+            background-color: #2c3e50;
+            color: #ff0000;
+        }
+        
+        .save-btn:active,
+        .save-btn:focus {
+            background-color: #2c3e50;
+            color: #02DAEE;
+        }
+        
+        /* Icons */
+        .user-icon, .mail-icon, .vk-icon, .group-icon {
+            color: rgba(255, 255, 255, 0.88);
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .col-md-6:last-child {
+                margin-top: 20px;
+            }
+            
+            .image-upload-container {
+                margin-top: 0;
+            }
+        }
+        
+        .input-group input {
+            padding: 0px 10px;
+            border: none;
+            background-color: #1B2D34;
+            color: white;
+            outline: none;
+        }
+
+        .img-article-left {
+            width: 140px;
+            height: 140px;
+            border-radius: 10px;
+            object-fit: cover;
+        }
+        
+        .thumb {
+            max-width: 140px;
+            max-height: 140px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        /* Modal Styles */
+        .modal-content {
+            background-color: #1B2D34;
+            border: none;
+            border-radius: 15px;
+            text-align: center;
+            color: #e0e0e0;
+        }
+        
+        .modal-header {
+            border: none;
+            padding: 20px;
+        }
+        
+        .modal-body {
+            padding: 20px;
+            font-size: 1.2rem;
+        }
+        
+        .modal-footer {
+            border: none;
+            justify-content: center;
+        }
+        
+        .close {
+            color: #e0e0e0;
+            opacity: 1;
+            font-size: 1.5rem;
+        }
+        
+        .close:hover {
+            color: #ffffff;
+        }
+
+        .modal-body svg {
+            margin-bottom: 30px; /* Отступ между иконкой и текстом */
+            margin-top: 10px; /* Поднятие иконки */
+            fill: #e0e0e0; /* Цвет иконки совпадает с цветом текста */
+        }
+
+        .avatar-hover {
+            cursor: pointer; /* Устанавливает курсор в виде руки при наведении */
+            transition: transform 0.2s ease; /* Добавляет плавный эффект */
+        }
+    
+        .avatar-hover:hover {
+            transform: scale(1.05); /* Увеличивает аватарку при наведении */
+        }
+
+        /* Кнопка "Сохранить изменения" */
+        .save-btn {
+            background-color: #1B2D34;
+            border: none;
+            color: #ffffff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            transition: color 0.3s, transform 0.2s;
+        }
+
+        .save-btn:hover,
+        .save-btn:focus {
+            color: #02DAEE; /* Изменение цвета текста */
+            transform: scale(1.05); /* Увеличение кнопки */
+        }
+
+        /* Кнопка "Отмена" */
+        .cancel-btn {
+            background-color: #1B2D34;
+            border: none;
+            color: #ffffff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            transition: color 0.3s, transform 0.2s;
+        }
+
+        .cancel-btn:hover,
+        .cancel-btn:focus {
+            color: #EE2502; /* Изменение цвета текста */
+            transform: scale(1.05); /* Увеличение кнопки */
+        }
+
+        .modal-body p {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+
+        .btn-danger {
+            background-color: #EE2502;
+            border: none;
+            color: #ffffff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            transition: transform 0.2s ease;
+        }
+
+        .btn-danger:hover {
+            transform: scale(1.05);
+        }
+
+        .btn-secondary {
+            background-color: #1B2D34;
+            border: none;
+            color: #ffffff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            transition: transform 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body class="bg-dark text-light">
+    <div class="container">
+        <!-- Logo -->
+        <div class="logo-container text-center">
+            <img src="/static/users/image/logo.png" alt="Logo" class="logo">
+        </div>
+        
+        <!-- Profile Settings Card -->
+        <div class="card profile-card">
+            <div class="card-header d-flex align-items-center">
+                <a href="{% url 'users:user_profile' %}" class="back-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="arrow-left">
+                        <path d="m12 19-7-7 7-7"></path>
+                        <path d="M19 12H5"></path>
+                    </svg>
+                </a>
+                <h4 class="ms-auto me-auto">Настройки профиля</h4>
+            </div>
+            
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" id="profileForm">
+                    {% csrf_token %}
+                    {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <ul>
+                                {% for field in form %}
+                                    {% for error in field.errors %}
+                                        <li>{{ field.label }}: {{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                                {% for error in form.non_field_errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                    <div class="row">
+                        <!-- Left column -->
+                        <div class="col-md-6">
+                            <!-- FIO Field -->
+                            <div class="form-group mb-4">
+                                <label for="id_Name_User">ФИО</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="user-icon">
+                                            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                                            <circle cx="12" cy="7" r="4"></circle>
+                                        </svg>
+                                    </span>
+                                    {{ form.Name_User }}
+                                </div>
+                            </div>
+                            
+                            <!-- Email Field -->
+                            <div class="form-group mb-4">
+                                <label for="id_email">Почта</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mail-icon">
+                                            <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+                                            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                                        </svg>
+                                    </span>
+                                    {{ form.email }}
+                                </div>
+                            </div>
+                            
+                            <!-- VK ID Field -->
+                            <div class="form-group mb-4">
+                                <label for="id_vk_id">BK ID</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="vk-icon">
+                                            <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"></path>
+                                            <path d="M9 12h6"></path>
+                                            <path d="M12 9v6"></path>
+                                        </svg>
+                                    </span>
+                                    {{ form.VK_id }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Right column -->
+                        <div class="col-md-6 d-flex flex-column">
+                            <!-- Group Field -->
+                            <div class="form-group mb-4">
+                                <label for="id_Number_of_group">Группа</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-icon">
+                                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                                            <circle cx="9" cy="7" r="4"></circle>
+                                            <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                        </svg>
+                                    </span>
+                                    {{ form.Number_of_group }}
+                                </div>
+                            </div>
+                            
+                            <!-- Image Upload -->
+                            <div class="image-upload-container flex-grow-1">
+                                <label for="id_Avatar" class="image-upload {% if user.Avatar %}d-none{% endif %}" id="avatarLabel">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="plus-icon">
+                                        <path d="M12 5v14"></path>
+                                        <path d="M5 12h14"></path>
+                                    </svg>
+                                </label>
+                                <input type="file" id="id_Avatar" name="Avatar" class="d-none" accept="image/*" onchange="previewAvatar(this)">
+                                {% if user.Avatar %}
+                                    <img id="avatarPreview" class="img-article-left thumb avatar-hover" src="{{ user.Avatar.url }}" alt="Avatar" onclick="triggerFileInput()">
+                                {% else %}
+                                    <img id="avatarPreview" class="img-article-left thumb d-none" alt="Avatar">
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Buttons -->
+                    <div class="d-flex justify-content-between mt-4">
+                        <button type="button" class="btn btn-outline-secondary cancel-btn" data-bs-toggle="modal" data-bs-target="#cancelModal">Отмена</button>
+                        <button type="submit" class="btn btn-primary save-btn">Сохранить изменения</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" fill="currentColor" class="bi bi-check-circle text-light" viewBox="0 0 16 16" style="margin-bottom: 30px; margin-top: 10px;">
+                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                        <path d="M10.97 4.97a.75.75 0 0 1 1.071 1.05l-3.992 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.235.235 0 0 1 .02-.022z"/>
+                    </svg>
+                    <p style="margin-top: 20px;">Настройки профиля изменены!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cancel Confirmation Modal -->
+    <div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <p>Вы точно хотите отменить изменения?</p>
+                    <div class="d-flex justify-content-center gap-3 mt-4">
+                        <button type="button" class="btn btn-danger" onclick="window.location.href='{% url 'users:user_profile' %}'">Да</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Нет</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function previewAvatar(input) {
+            const file = input.files[0];
+            const preview = document.getElementById('avatarPreview');
+            const label = document.getElementById('avatarLabel');
+    
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    preview.src = e.target.result;
+                    preview.classList.remove('d-none'); // Показать изображение
+                    label.classList.add('d-none'); // Скрыть квадрат с плюсом
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+    
+        function triggerFileInput() {
+            document.getElementById('id_Avatar').click(); // Открыть окно выбора файла
+        }
+
+        document.getElementById('profileForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent default form submission for now
+            const form = this;
+            const formData = new FormData(form);
+
+            fetch('', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    const modal = new bootstrap.Modal(document.getElementById('successModal'));
+                    modal.show();
+                    setTimeout(() => {
+                        modal.hide();
+                        window.location.href = '{% url "users:user_profile" %}';
+                    }, 2000); // Redirect after 2 seconds
+                } else {
+                    return response.json().then(data => {
+                        console.error(data);
+                        form.innerHTML = ''; // Clear form
+                        form.appendChild(document.createElement('div')).className = 'alert alert-danger';
+                        form.querySelector('.alert').textContent = 'Ошибка при сохранении изменений.';
+                    });
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    </script>
+</body>
+</html>
 {% endblock %}
