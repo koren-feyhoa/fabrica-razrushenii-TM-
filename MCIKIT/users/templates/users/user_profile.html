@@ -253,7 +253,7 @@
         <!-- Header with logo -->
         <header class="text-center mb-5">
             <img src="/static/users/image/logo.png" alt="Логотип" class="logo">
-            <a href="{% url 'start_page' %}" class="home-link">Главная страница</a> 
+            <a href="{% url 'main' %}" class="home-link">Главная страница</a> 
         </header>
 
         <!-- User Profile Section -->
@@ -271,7 +271,12 @@
                 <div class="col">
                     <h3>{{ user.Name_User }}</h3>
                     <p class="mb-1">{{ user.Number_of_group }}</p>
-                    <p>{{ user.username }}</p>
+                    <p>{{ user.VK_id }}</p>
+                    {% if user.is_super_user %}
+                    <p>Глава КМО</p>
+                    {% elif user.is_pro_user %}
+                    <p>Активист МЦ ИКИТ</p>
+                    {% endif %}
                 </div>
                 <div class="col-auto">
                     <a href="{% url 'users:user_settings' %}" class="btn btn-outline-secondary">
@@ -279,9 +284,11 @@
                     </a>
                 </div>
                 <div class="col-auto">
-                    <button class="btn btn-outline-secondary">
-                        Выйти из аккаунта <i class="fas fa-sign-out-alt ms-2"></i>
-                    </button>
+                    <a href="{% url 'start_page' %}" >
+                        <button class="btn btn-outline-secondary">
+                            Выйти из аккаунта <i class="fas fa-sign-out-alt ms-2"></i>
+                        </button>
+                    </a>
                 </div>
             </div>
         </div>
