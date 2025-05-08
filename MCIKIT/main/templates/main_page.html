@@ -407,10 +407,10 @@
                             <div class="event-info">
                                 <div class="d-flex justify-content-between mb-2">
                                     <div>
-                                        <i class="far fa-calendar"></i> {{ event.date }}
+                                        <i class="bi bi-calendar"></i> <span>{{event.date}}</span>
                                     </div>
                                     <div>
-                                        <i class="far fa-clock"></i> {{ event.time }}
+                                        <i class="bi bi-clock"></i> <span>{{event.time}}</span>
                                     </div>
                                 </div>
                                 <h5 class="event-title">{{ event.title }}</h5>
@@ -483,8 +483,8 @@
                         <div class="event-details-content">
                             <h5 class="event-title">${event.title}</h5>
                             <div class="event-details-meta">
-                                <i class="far fa-calendar"></i> <span>${event.date}</span><br>
-                                <i class="far fa-clock"></i> <span>${event.time}</span>
+                                <i class="bi bi-calendar"></i> <span>${event.date}</span><br>
+                                <i class="bi bi-clock"></i> <span>${event.time}</span>
                             </div>
                             <p class="event-details-description">${event.description}</p>
                             <a href="${eventUrl}" class="btn btn-primary mt-3">Подробнее</a>
