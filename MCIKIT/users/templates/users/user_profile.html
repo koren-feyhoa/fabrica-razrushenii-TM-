@@ -253,7 +253,7 @@
         <!-- Header with logo -->
         <header class="text-center mb-5">
             <img src="/static/users/image/logo.png" alt="Логотип" class="logo">
-            <a href="{% url 'main' %}" class="home-link">Главная страница</a> 
+            <a href="{% url 'main' %}" class="home-link">Главная страница</a>
         </header>
 
         <!-- User Profile Section -->
@@ -271,25 +271,17 @@
                 <div class="col">
                     <h3>{{ user.Name_User }}</h3>
                     <p class="mb-1">{{ user.Number_of_group }}</p>
-                    <p>{{ user.VK_id }}</p>
-                    {% if user.is_super_user %}
-                        <p>Глава КМО</p>
-                    {% elif user.is_pro_user %}
-                        <p>Активист МЦ ИКИТ</p>
-                    {% endif %}
+                    <p>{{ user.username }}</p>
                 </div>
                 <div class="col-auto">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <a href="{% url 'users:user_settings' %}" class="btn btn-outline-secondary me-2">
-                            <i class="fas fa-cog"></i>
-                        </a>
-                        <a href="{% url 'start_page' %}" class="btn btn-outline-secondary">
-                            Выйти из аккаунта <i class="fas fa-sign-out-alt ms-2"></i>
-                        </a>
-                    </div>
-                    {% if user.is_pro_user or user.is_super_user %}
-                        <a href="{% url 'add_events:event_create' %}" class="btn btn-organize mt-3 w-100">Организовать мероприятие</a>
-                    {% endif %}
+                    <a href="{% url 'users:user_settings' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-cog"></i>
+                    </a>
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-outline-secondary">
+                        Выйти из аккаунта <i class="fas fa-sign-out-alt ms-2"></i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -391,8 +383,14 @@
                                 <span class="nav-btn"><i class="fas fa-chevron-right"></i></span>
                             </button>
                         </div>
+                        <div class="text-center mt-4">
+                            <a href="{% url 'add_events:event_create' %}" class="btn btn-organize">Организовать мероприятие</a>
+                        </div>
                     {% else %}
                         <div class="no-events">Организованных мероприятий нет</div>
+                        <div class="text-center mt-4">
+                            <a href="{% url 'add_events:event_create' %}" class="btn btn-organize">Организовать мероприятие</a>
+                        </div>
                     {% endif %}
                 </div>
             {% endif %}

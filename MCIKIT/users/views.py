@@ -130,6 +130,17 @@ def make_pro_user(request, user_id):
         raise PermissionDenied("Только SuperUser может повышать пользователей до ProUser")
 
     user = get_object_or_404(User, id=user_id)
-    user.make_pro_user(promoted_by=request.user)
+    user.make_pro_user()
     messages.success(request, f'Пользователь {user.Name_User} успешно повышен до ProUser')
-    return redirect('user_list')
+    return redirect('users:user_list')
+
+@login_required
+def make_regular_user(request, user_id):
+    """Понижает пользователя до обычного User"""
+    if not request.user.is_super_user():
+        raise PermissionDenied("Только SuperUser может понижать пользователей до User")
+
+    user = get_object_or_404(User, id=user_id)
+    user.make_regular_user()
+    messages.success(request, f'Пользователь {user.Name_User} понижен до обычного пользователя')
+    return redirect('users:user_list')

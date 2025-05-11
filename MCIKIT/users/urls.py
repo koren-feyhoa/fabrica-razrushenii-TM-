@@ -31,6 +31,7 @@ urlpatterns=[
     path('accounts/settings/', UserSettingsView, name='user_settings'),
 path('users/', views.user_list, name='user_list'),
     path('make-pro-user/<int:user_id>/', views.make_pro_user, name='make_pro_user'),
+    path('make-regular-user/<int:user_id>/', views.make_regular_user, name='make_regular_user'),
 
  path('rate_event/<int:event_id>/', rate_event, name='rate_event'),
 

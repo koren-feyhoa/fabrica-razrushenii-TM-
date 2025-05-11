@@ -35,6 +35,12 @@ class User(AbstractUser):
         if not self.is_pro_user():
             self.role = 'pro_user'
             self.save()
+            
+    def make_regular_user(self):
+        """Понижает роль пользователя до обычного пользователя"""
+        if self.is_pro_user():
+            self.role = 'user'
+            self.save()
 
     def make_organizer_of_event(self, event, added_by):
         """Делает пользователя организатором мероприятия"""

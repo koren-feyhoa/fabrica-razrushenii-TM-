@@ -39,6 +39,11 @@
                             {% csrf_token %}
                             <button type="submit" class="btn btn-primary">Сделать ProUser</button>
                         </form>
+                    {% elif user.role == 'pro_user' %}
+                        <form method="post" action="{% url 'users:make_regular_user' user.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-warning">Сделать обычным User</button>
+                        </form>
                     {% endif %}
                 </td>
             </tr>
