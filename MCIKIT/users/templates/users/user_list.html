@@ -3,37 +3,44 @@
 {% block title %}Список пользователей{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h1>Список пользователей</h1>
-    
-    {% if messages %}
-    <div class="messages">
-        {% for message in messages %}
-        <div class="alert alert-{{ message.tags }}">
-            {{ message }}
+<div class="container d-flex flex-column align-items-center justify-content-center vh-100">
+    <!-- Карточка со списком пользователей -->
+    <div class="card user-list-card">
+        <div class="card-header d-flex align-items-center">
+            <div class = card-header-row> 
+            <a href="{% url 'main' %}" class="back-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="arrow-left">
+                    <path d="m12 19-7-7 7-7"></path>
+                    <path d="M19 12H5"></path>
+                </svg>
+            </a>
+            <h4 class="ms-auto me-auto">Список пользователей</h4>
         </div>
-        {% endfor %}
-    </div>
-    {% endif %}
 
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Имя пользователя</th>
-                <th>ФИО</th>
-                <th>Группа</th>
-                <th>Роль</th>
-                <th>Действия</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for user in users %}
-            <tr>
-                <td>{{ user.username }}</td>
-                <td>{{ user.Name_User }}</td>
-                <td>{{ user.Number_of_group }}</td>
-                <td>{{ user.get_role_display }}</td>
-                <td>
+        <div class="card-body">
+            <!-- Поле поиска -->
+            <div class="mb-3">
+                <input type="text" id="searchInput" class="form-control" placeholder="Поиск по ФИО...">
+            </div>
+
+            <!-- Список пользователей -->
+            <div class="user-table">
+                <div class="user-table-header">
+                    <div class="user-column">Имя пользователя</div>
+                    <div class="user-column">ФИО</div>
+                    <div class="user-column">Группа</div>
+                    <div class="user-column">Роль</div>
+                    <div class="user-column">Действия</div>
+                </div>
+
+                <div class="user-table-body" style="max-height: 300px; overflow-y: auto;">
+                    {% for user in users %}
+                    <div class="user-row">
+                        <div class="user-column">{{ user.username }}</div>
+                        <div class="user-column user-name">{{ user.Name_User }}</div>
+                        <div class="user-column">{{ user.Number_of_group }}</div>
+                        <div class="user-column role-column" data-user-id="{{ user.id }}">{{ user.get_role_display }}</div>
+                        <div class="user-column">
                     {% if user.role == 'user' %}
                         <form method="post" action="{% url 'users:make_pro_user' user.id %}">
                             {% csrf_token %}
@@ -42,13 +49,251 @@
                     {% elif user.role == 'pro_user' %}
                         <form method="post" action="{% url 'users:make_regular_user' user.id %}">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-warning">Сделать обычным User</button>
+                            <button type="submit" class="btn btn-warning">Сделать User</button>
                         </form>
                     {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Back button functionality
+    const backButton = document.getElementById('backButton');
+    if (backButton) {
+        backButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Back button clicked');
+            alert('Back navigation would happen here');
+        });
+    }
+
+    // Handle form submission for role change
+    const roleForms = document.querySelectorAll('.role-form');
+    roleForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(form);
+            const userId = form.action.split('/').pop();
+            const roleColumn = document.querySelector(`.role-column[data-user-id="${userId}"]`);
+
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (roleColumn) {
+                        roleColumn.textContent = 'ProUser';
+                    }
+                    const button = form.querySelector('.action-button');
+                    if (button) {
+                        button.closest('.user-column').innerHTML = '';
+                    }
+                } else {
+                    alert('Ошибка при изменении роли: ' + (data.message || 'Неизвестная ошибка'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Произошла ошибка при изменении роли.');
+            });
+        });
+    });
+
+    // Поле поиска
+    const searchInput = document.getElementById('searchInput');
+    const userRows = document.querySelectorAll('.user-row');
+
+    searchInput.addEventListener('input', function () {
+        const query = searchInput.value.toLowerCase();
+
+        userRows.forEach(row => {
+            const userName = row.querySelector('.user-name').textContent.toLowerCase();
+            if (userName.includes(query)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+});
+</script>
+
+<style>
+    body {
+        background-color: #1B2D34;
+        color: #e0e0e0;
+        font-family: Roboto, sans-serif;
+        height: 95vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .user-list-card {
+        background-color: #243B44;
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        color: #e0e0e0;
+        max-width: 900px;
+        width: 100%;
+    }
+
+    .card-header {
+        background-color: #243B44;
+        border-bottom: 1px solid #2c3e50;
+        padding: 20px;
+        border-radius: 15px 15px 0 0 !important;
+    }
+
+    .back-btn {
+        color: #e0e0e0;
+        text-decoration: none;
+        padding-right: 20px;
+    }
+
+    .btn-primary {
+        background-color: transparent;
+        border: 1px solid #889199;
+        color: #ffffff;
+        border-radius: 5px;
+        padding: 4px 8px;
+        width: 100%;
+        margin-top: 10px;
+        transition: all 0.3s;
+    }
+
+    .btn-primary:hover {
+        background-color: rgb(56, 80, 99);
+    }
+
+    .btn-warning {
+        background-color:rgb(56, 80, 99);
+        border: 1px solid #889199;
+        color: #ffffff;
+        border-radius: 5px;
+        padding: 4px 8px;
+        width: 100%;
+        margin-top: 10px;
+        transition: all 0.3s;
+    }
+
+    .btn-warning:hover {
+            background-color: #283845;
+    }
+
+
+    .arrow-left {
+        color: #e0e0e0;
+    }
+
+    .card-body {
+        padding: 30px;
+    }
+
+    .form-control {
+        background-color: #1B2D34;
+        border: none;
+        color: #ffffff;
+        padding: 10px 15px;
+        outline: none;
+        border-radius: 5px;
+    }
+
+    .form-control::placeholder {
+        color: #8b9ca8;
+    }
+
+    .form-control:focus {
+        background-color: #1B2D34;
+        border-color: #3498db;
+        box-shadow: none;
+        color: #e0e0e0;
+    }
+
+    .card-header-row {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        flex: 1;
+        padding: 0px;
+    }
+
+    .user-table-header {
+        margint-top: 20px;
+        display: flex;
+        padding: 10px 0px;
+        padding-right: 15px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .user-row {        
+        display: flex;
+        padding: 10px 0px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .mb-3 {
+    margin-bottom: 30px !important;
+}
+
+    .user-column {
+        width: 25%;
+        flex: 1;
+        padding: 0 45px;
+        display: flex;
+        align-items: center;;
+    }   padding: 0 10px;
+: flex;
+
+ld(2) {
+    .user-column:nth-child(3) {
+        flex: 0.8;
+    }
+}
+.user-column:nth-child(3) {
+    .user-column:nth-child(4) {
+        flex: 0.8;
+    }
+}
+.user-column:nth-child(4) {
+    .user-column:nth-child(5) {
+        flex: 1.2;
+        justify-content: center;
+    }.user-column:nth-child(5) {
+
+        .action-button {ntent: center;
+            background-color: #12232e;
+            color: white;
+            border: none;
+            border-radius: 5px; {
+            padding: 8px 15px;   background-color: #12232e;
+            font-size: 14px;    color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;ius: 5px;
+            }
+        }
+    }
+}
+
+   font-size: 18px;
+    .action-button:hover {    cursor: pointer;
+        background-color: #1c3c50;kground-color 0.3s;
+    }
+</style>
 {% endblock %}

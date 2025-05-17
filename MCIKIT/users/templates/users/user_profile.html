@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.2/css/all.css">
     <style>
         body {
-            background-color: #1a2631 !important;
+            background-color: #1B2D34 !important;
             color: #ffffff !important;
             font-family: Roboto, sans-serif;
         }
@@ -85,7 +85,7 @@
             padding: 15px;
         }
 
-        .btn-review, .btn-organize {
+        .btn-organize {
             background-color: transparent;
             border: 1px solid #889199;
             color: #ffffff;
@@ -96,7 +96,7 @@
             transition: all 0.3s;
         }
 
-        .btn-review:hover, .btn-organize:hover {
+        .btn-organize:hover {
             background-color: #283845;
         }
 
@@ -248,7 +248,7 @@
         }
     </style>
 </head>
-<body class="bg-dark text-light">
+<body class="text-light">
     <div class="container py-4">
         <!-- Header with logo -->
         <header class="text-center mb-5">
@@ -273,15 +273,21 @@
                     <p class="mb-1">{{ user.Number_of_group }}</p>
                     <p>{{ user.username }}</p>
                 </div>
-                <div class="col-auto">
-                    <a href="{% url 'users:user_settings' %}" class="btn btn-outline-secondary">
-                        <i class="fas fa-cog"></i>
-                    </a>
-                </div>
-                <div class="col-auto">
-                    <button class="btn btn-outline-secondary">
-                        Выйти из аккаунта <i class="fas fa-sign-out-alt ms-2"></i>
-                    </button>
+                <div class="col-auto d-flex flex-column align-items-end">
+                    <div class="d-flex gap-2 mb-2">
+                        <a href="{% url 'users:user_settings' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-cog"></i>
+                        </a>
+                        <form action="{% url 'users:logout' %}" method="post" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-secondary">
+                                Выйти из аккаунта <i class="fas fa-sign-out-alt ms-2"></i>
+                            </button>
+                        </form>
+                    </div>
+                    {% if user.is_pro_user or user.is_super_user %}
+                        <a href="{% url 'add_events:event_create' %}" class="btn btn-organize w-100">Организовать мероприятие</a>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -383,14 +389,8 @@
                                 <span class="nav-btn"><i class="fas fa-chevron-right"></i></span>
                             </button>
                         </div>
-                        <div class="text-center mt-4">
-                            <a href="{% url 'add_events:event_create' %}" class="btn btn-organize">Организовать мероприятие</a>
-                        </div>
                     {% else %}
                         <div class="no-events">Организованных мероприятий нет</div>
-                        <div class="text-center mt-4">
-                            <a href="{% url 'add_events:event_create' %}" class="btn btn-organize">Организовать мероприятие</a>
-                        </div>
                     {% endif %}
                 </div>
             {% endif %}

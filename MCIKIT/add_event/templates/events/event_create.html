@@ -217,6 +217,57 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #02DAEE;
         }
+
+        /* Цвет текста имени организатора */
+        .list-group-item {
+            color: #ffffff; /* Цвет текста, как у "Управление организаторами" */
+            background-color: #2a3a47; /* Цвет фона */
+            border: none;
+        }
+
+        .list-group-item:hover {
+            background-color: #344a5a; /* Цвет при наведении */
+        }
+
+        .list-group-item button {
+            color: #02DAEE; /* Цвет кнопки "Добавить" */
+        }
+
+        /* Зеленая кнопка "Добавить" */
+        .btn-outline-success {
+            border-color: #28a745;
+            color: #28a745;
+        }
+
+        .btn-outline-success:hover {
+            background-color: #28a745;
+            color: #ffffff;
+        }
+
+        /* Красная кнопка "Удалить" */
+        .btn-outline-danger {
+            border-color: #dc3545;
+            color: #dc3545;
+        }
+
+        .btn-outline-danger:hover {
+            background-color: #dc3545;
+            color: #ffffff;
+        }
+
+        /* Стили для списка организаторов */
+        .list-group-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #2a3a47;
+            color: #ffffff;
+            border: none;
+        }
+
+        .list-group-item:hover {
+            background-color: #344a5a;
+        }
     </style>
 </head>
 <body>
@@ -361,7 +412,7 @@
                         </div>
 
                         <div class="d-flex justify-content-end mt-4">
-                            <a href="{% url 'add_events:event_list' %}" class="btn btn-secondary me-2">Отмена</a>
+                            <a href="{% url 'users:user_profile' %}" class="btn btn-secondary me-2">Отмена</a>
                             <button type="submit" class="btn btn-primary">Создать мероприятие</button>
                         </div>
                     </div>
@@ -380,7 +431,7 @@
                     <div class="modal-body">
                         <div class="current-organizers mb-3">
                             <h6>Текущие организаторы:</h6>
-                            <ul id="organizersList" class="list-group"></ul>
+                            <ul id="organizersList" class="list-group" style="display: none;"></ul> <!-- Скрываем список по умолчанию -->
                         </div>
                         <div class="add-organizer">
                             <h6>Добавить организатора:</h6>
@@ -594,16 +645,53 @@
             }
         }
 
-// Organizers modal functionality
-        let selectedOrganizers = new Set();
+        let selectedOrganizers = new Map(); // Используем Map для хранения id и имен организаторов
 
-        function openOrganizersModal() {
-            organizersModal.show();
-            updateOrganizersList();
+        function addOrganizer(userId, userName) {
+            if (!selectedOrganizers.has(userId)) {
+                selectedOrganizers.set(userId, userName); // Сохраняем id и имя
+                updateOrganizersList();
+                updateHiddenField();
+                toggleProUsersList();
+            }
         }
 
-        function closeOrganizersModal() {
-            organizersModal.hide();
+        function removeOrganizer(userId) {
+            selectedOrganizers.delete(userId); // Удаляем организатора
+            updateOrganizersList();
+            updateHiddenField();
+        }
+
+        function updateOrganizersList() {
+            const organizersList = document.getElementById('organizersList');
+            organizersList.innerHTML = '';
+
+            if (selectedOrganizers.size === 0) {
+                organizersList.style.display = 'none'; // Скрываем список, если нет организаторов
+            } else {
+                organizersList.style.display = 'block'; // Показываем список, если есть организаторы
+                selectedOrganizers.forEach((userName, userId) => {
+                    const li = document.createElement('li');
+                    li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                    li.style.backgroundColor = '#2a3a47'; // Цвет фона
+                    li.innerHTML = `
+                        <span>${userName}</span>
+                        <button class="btn btn-sm btn-outline-danger" onclick="removeOrganizer(${userId})">
+                            <i class="bi bi-trash"></i> <!-- Иконка корзины -->
+                        </button>
+                    `;
+                    organizersList.appendChild(li);
+                });
+            }
+        }
+
+        function updateHiddenField() {
+            const hiddenField = document.querySelector('select[name="additional_organizers"]');
+            const selectedValues = Array.from(selectedOrganizers.keys());
+
+            Array.from(hiddenField.options).forEach(option => {
+                option.selected = selectedValues.includes(parseInt(option.value));
+            });
         }
 
         function toggleProUsersList() {
@@ -624,66 +712,25 @@
                     proUsersList.innerHTML = '';
                     const ul = document.createElement('ul');
                     ul.className = 'list-group';
+
                     data.forEach(user => {
                         if (!selectedOrganizers.has(user.id)) {
                             const li = document.createElement('li');
-                            li.className = 'list-group-item';
+                            li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                            li.style.backgroundColor = '#2a3a47'; // Цвет фона
                             li.innerHTML = `
-                                ${user.Name_User}
-                                <button class="btn btn-sm btn-outline-primary"
-                                        onclick="addOrganizer(${user.id}, '${user.Name_User}')">
-                                    Добавить
+                                <span>${user.Name_User}</span>
+                                <button class="btn btn-sm btn-outline-success" onclick="addOrganizer(${user.id}, '${user.Name_User}')">
+                                    <i class="bi bi-plus-lg"></i> <!-- Иконка плюса -->
                                 </button>
                             `;
                             ul.appendChild(li);
                         }
                     });
+
                     proUsersList.appendChild(ul);
                 });
         }
-
-        function addOrganizer(userId, userName) {
-            selectedOrganizers.add(userId);
-            updateOrganizersList();
-            updateHiddenField();
-            toggleProUsersList();
-        }
-
-        function removeOrganizer(userId) {
-            selectedOrganizers.delete(userId);
-            updateOrganizersList();
-            updateHiddenField();
-        }
-
-        function updateOrganizersList() {
-            const organizersList = document.getElementById('organizersList');
-            organizersList.innerHTML = '';
-            selectedOrganizers.forEach(userId => {
-                const li = document.createElement('li');
-                li.className = 'list-group-item';
-                li.innerHTML = `
-                    ${userId}
-                    <button class="btn btn-sm btn-outline-danger"
-                            onclick="removeOrganizer(${userId})">
-                        Удалить
-                    </button>
-                `;
-                organizersList.appendChild(li);
-            });
-        }
-
-        function updateHiddenField() {
-            const hiddenField = document.querySelector('select[name="additional_organizers"]');
-            const selectedValues = Array.from(selectedOrganizers);
-            Array.from(hiddenField.options).forEach(option => {
-                option.selected = selectedValues.includes(parseInt(option.value));
-            });
-        }
-
-        // Search functionality for organizers
-        document.getElementById('organizerSearch').addEventListener('input', function() {
-            loadProUsers(this.value);
-        });
 
         function saveMaxParticipants() {
             const value = document.getElementById('maxMembersInput').value;
