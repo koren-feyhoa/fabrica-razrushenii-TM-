@@ -287,6 +287,11 @@
                     <h3>{{ user.Name_User }}</h3>
                     <p class="mb-1">{{ user.Number_of_group }}</p>
                     <p>{{ user.username }}</p>
+                    {% if user.is_super_user %}
+                    <p style="color: #02DAEE">Глава КМО</p>
+                    {% elif user.is_pro_user %}
+                    <p style="color: #02DAEE;">Активист МЦ ИКИТ</p>
+                    {% endif %}
                 </div>
                 <div class="col-auto d-flex flex-column align-items-end">
                     <div class="d-flex gap-2 mb-2">
