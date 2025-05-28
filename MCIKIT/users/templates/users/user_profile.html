@@ -100,6 +100,21 @@
             background-color: #283845;
         }
 
+        .btn-review-event {
+            background-color: transparent;
+            border: 1px solid #889199;
+            color: #ffffff;
+            border-radius: 20px;
+            padding: 8px 16px;
+            width: 100%;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+
+        .btn-review-event:hover {
+            background-color: #283845;
+        }
+
         .carousel-control-prev, .carousel-control-next {
             width: 40px;
             height: 40px;
@@ -376,7 +391,7 @@
                                                 </div>
                                                 <h5>{{ event.title_event }}</h5>
                                                 <p>Средняя оценка: {{ event.average_rate|floatformat:1 }}</p>
-                                                <a href="{% url 'add_events:event_reviews' event.pk %}" class="btn btn-review">Отзывы</a>
+                                                <a href="{% url 'add_events:event_reviews' event.pk %}" class="btn btn-review-event">Отзывы</a>
                                             </div>
                                         </div>
                                     </div>
