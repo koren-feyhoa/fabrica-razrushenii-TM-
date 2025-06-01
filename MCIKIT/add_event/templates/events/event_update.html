@@ -1,302 +1,538 @@
 {% load static %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2 class="mb-4">Изменение мероприятия</h2>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Изменение мероприятия</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: #1B2D34;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+        }
 
-    <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
-        {% csrf_token %}
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
 
-        <div class="card mb-4">
-            <div class="card-body">
-                <!-- Основные поля -->
-                <div class="mb-3">
-                    <label for="{{ form.title_event.id_for_label }}" class="form-label">Название мероприятия</label>
-                    {{ form.title_event }}
-                    {% if form.title_event.errors %}
-                        <div class="invalid-feedback">{{ form.title_event.errors }}</div>
-                    {% endif %}
-                </div>
+        .form-control {
+            background-color: transparent;
+            border: none;
+            border-bottom: 1px solid #3a4a56;
+            color: #ffffff;
+            border-radius: 0;
+        }
 
-                <div class="mb-3">
-                    <label for="{{ form.description_Event.id_for_label }}" class="form-label">Описание мероприятия</label>
-                    {{ form.description_Event }}
-                    {% if form.description_Event.errors %}
-                        <div class="invalid-feedback">{{ form.description_Event.errors }}</div>
-                    {% endif %}
-                </div>
+        .form-control::placeholder {
+            color: #8b9ca8;
+            opacity: 0.7;
+        }
 
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="id_event_date" class="form-label">Дата проведения</label>
-                            <input type="date"
-                                   name="event_date"
-                                   class="form-control"
-                                   id="id_event_date"
-                                   value="{{ event.event_date|date:'Y-m-d' }}"
-                                   required>
-                            {% if form.event_date.errors %}
-                                <div class="invalid-feedback">{{ form.event_date.errors }}</div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="id_event_time" class="form-label">Время начала</label>
-                            <input type="time"
-                                   name="event_time"
-                                   class="form-control"
-                                   id="id_event_time"
-                                   value="{{ event.event_time|time:'H:i' }}"
-                                   required>
-                            {% if form.event_time.errors %}
-                                <div class="invalid-feedback">{{ form.event_time.errors }}</div>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
+        .form-control:focus {
+            background-color: transparent;
+            color: #ffffff;
+            box-shadow: none;
+            border-color: #02DAEE;
+        }
 
-                <div class="mb-3">
-                    <label for="{{ form.event_place.id_for_label }}" class="form-label">Место проведения</label>
-                    {{ form.event_place }}
-                    {% if form.event_place.errors %}
-                        <div class="invalid-feedback">{{ form.event_place.errors }}</div>
-                    {% endif %}
-                </div>
+        .btn-primary {
+            background-color: #02DAEE;
+            border: none;
+            border-radius: 8px;
+            padding: 10px;
+        }
 
-                <div class="mb-3">
-                    <label for="{{ form.Event_photo.id_for_label }}" class="form-label">Фото мероприятия</label>
-                    {% if event.Event_photo %}
-                        <div class="mb-2">
-                            <img src="{{ event.Event_photo.url }}" alt="Текущее фото" class="img-thumbnail" style="max-height: 200px;">
-                        </div>
-                    {% endif %}
-                    {{ form.Event_photo }}
-                    {% if form.Event_photo.errors %}
-                        <div class="invalid-feedback">{{ form.Event_photo.errors }}</div>
-                    {% endif %}
-                </div>
+        .btn-primary:hover, .btn-primary:focus {
+            background-color: #3498db;
+        }
 
-                <!-- Дополнительные настройки -->
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label for="{{ form.max_members.id_for_label }}" class="form-label">
-                                Максимальное количество участников
+        .btn-secondary {
+            background-color: #2a3a47;
+            border: none;
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        .btn-secondary:hover, .btn-secondary:focus {
+            background-color: #344a5a;
+        }
+
+        .modal-content {
+            background-color: #1e2c37;
+            border: none;
+            border-radius: 12px;
+            color: #ffffff;
+        }
+
+        .modal-header {
+            background-color: #2a3a47;
+            border-bottom: none;
+            color: #ffffff;
+        }
+
+        .organizer-item {
+            background-color: #2a3a47;
+            cursor: pointer;
+            border-radius: 8px;
+        }
+
+        .organizer-item:hover {
+            background-color: #344a5a !important;
+        }
+
+        .photo-upload-container {
+            position: relative;
+            width: 100%;
+            height: 240px;
+        }
+
+        .photo-upload-area {
+            height: 240px;
+            width: 100%;
+            border: 1px dashed #3a4a56;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .img-article-left {
+            width: 100%;
+            height: 240px;
+            border-radius: 12px;
+            object-fit: cover;
+            cursor: pointer;
+        }
+
+        .thumb {
+            max-width: 100%;
+            max-height: 240px;
+        }
+
+        .d-none {
+            display: none !important;
+        }
+
+        .event-preview, .event-form {
+            background-color: #243B44;
+            border-radius: 12px;
+        }
+
+        .event-actions .action-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            cursor: pointer;
+        }
+
+        .event-actions .action-item svg {
+            color: #8b9ca8;
+        }
+
+        .event-actions .action-item span {
+            color: #8b9ca8;
+            font-size: 0.9rem;
+        }
+
+        .settings-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            color: #ffffff;
+        }
+
+        .settings-item svg {
+            color: #ffffff;
+        }
+
+        .settings-item span {
+            color: #ffffff;
+            font-size: 0.9rem;
+        }
+
+        .card-header {
+            background-color: #2a3a47;
+            border-bottom: none;
+            color: #ffffff;
+        }
+
+        .card-body {
+            background-color: #243B44;
+            color: #ffffff;
+        }
+
+        .card {
+            border: none;
+            border-radius: 8px;
+        }
+
+        .list-group-item {
+            color: #ffffff;
+            background-color: #2a3a47;
+            border: none;
+        }
+
+        .list-group-item:hover {
+            background-color: #344a5a;
+        }
+
+        .btn-outline-primary {
+            border-color: #02DAEE;
+            color: #02DAEE;
+        }
+
+        .btn-outline-primary:hover {
+            background-color: #02DAEE;
+            color: #ffffff;
+        }
+
+        .btn-outline-success {
+            border-color: #28a745;
+            color: #28a745;
+        }
+
+        .btn-outline-success:hover {
+            background-color: #28a745;
+            color: #ffffff;
+        }
+
+        .btn-outline-danger {
+            border-color: #dc3545;
+            color: #dc3545;
+        }
+
+        .btn-outline-danger:hover {
+            background-color: #dc3545;
+            color: #ffffff;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1B2D34;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #344a5a;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #02DAEE;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="d-flex justify-content-center mb-4">
+            <img src="{% static 'start_page/image/logo.png' %}" alt="Logo" style="width: 136px; height:auto;" />
+        </div>
+
+        <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-5">
+                    <div class="event-preview p-4 mb-4">
+                        <div class="photo-upload-container">
+                            <label for="id_Event_photo" class="photo-upload-area" id="eventPhotoLabel" {% if event.Event_photo %}style="display: none;"{% endif %}>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="plus-icon">
+                                    <path d="M12 5v14"></path>
+                                    <path d="M5 12h14"></path>
+                                </svg>
                             </label>
-                            {{ form.max_members }}
-                            <small class="form-text text-muted">0 - без ограничений</small>
-                            {% if form.max_members.errors %}
-                                <div class="invalid-feedback">{{ form.max_members.errors }}</div>
+                            <input type="file" id="id_Event_photo" name="Event_photo" class="d-none" accept="image/*" onchange="previewEventPhoto(this)">
+                            {% if event.Event_photo %}
+                                <img id="eventPhotoPreview" src="{{ event.Event_photo.url }}" class="img-article-left thumb" alt="Event Photo" onclick="triggerEventPhotoInput()">
+                            {% else %}
+                                <img id="eventPhotoPreview" class="img-article-left thumb d-none" alt="Event Photo" onclick="triggerEventPhotoInput()">
                             {% endif %}
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">Организаторы</label>
-                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="openOrganizersModal()">
-                                Управление организаторами
-                            </button>
-                            <!-- Скрытое поле для хранения выбранных организаторов -->
-                            {{ form.additional_organizers }}
+                        <div class="event-actions mt-3">
+                            <div class="action-item" data-bs-toggle="tooltip" title="Выбрать дату">
+                                <div class="me-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                                    </svg>
+                                </div>
+                                <input type="date" name="event_date" class="form-control" id="id_event_date" value="{{ event.event_date|date:'Y-m-d' }}" required>
+                            </div>
+
+                            <div class="action-item" data-bs-toggle="tooltip" title="Выбрать время">
+                                <div class="me-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <polyline points="12 6 12 12 16 14"></polyline>
+                                    </svg>
+                                </div>
+                                <input type="time" name="event_time" class="form-control" id="id_event_time" value="{{ event.event_time|time:'H:i' }}" required>
+                            </div>
+
+                            <div class="action-item" data-bs-toggle="tooltip" title="Добавить место">
+                                <div class="me-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                        <circle cx="12" cy="10" r="3"></circle>
+                                    </svg>
+                                </div>
+                                {{ form.event_place }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-7">
+                    <div class="event-form p-4">
+                        {{ form.title_event }}
+                        {% if form.title_event.errors %}
+                            <div class="invalid-feedback d-block">{{ form.title_event.errors }}</div>
+                        {% endif %}
+
+                        {{ form.description_Event }}
+                        {% if form.description_Event.errors %}
+                            <div class="invalid-feedback d-block">{{ form.description_Event.errors }}</div>
+                        {% endif %}
+
+                        <button type="button" class="btn btn-outline-primary w-100 mb-3" onclick="toggleSettings()">
+                            Дополнительные настройки
+                        </button>
+
+                        <div id="additionalSettings" style="display: none;">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="settings-item mb-3">
+                                        <div class="me-2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                                <circle cx="12" cy="7" r="4"></circle>
+                                            </svg>
+                                        </div>
+                                        <button type="button" class="btn btn-outline-primary btn-sm ms-2" onclick="openOrganizersModal()">
+                                            Управление организаторами
+                                        </button>
+                                        {{ form.additional_organizers }}
+                                    </div>
+
+                                    <div class="settings-item mb-3">
+                                        <div class="me-2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                                <circle cx="9" cy="7" r="4"></circle>
+                                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                            </svg>
+                                        </div>
+                                        <label for="{{ form.max_members.id_for_label }}" class="form-label">Максимальное количество участников</label>
+                                        {{ form.max_members }}
+                                        <small class="form-text text-muted">0 - без ограничений</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end mt-4">
+                            <a href="{% url 'users:user_profile' %}" class="btn btn-secondary me-2">Отмена</a>
+                            <button type="submit" class="btn btn-primary">Сохранить изменения</button>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </form>
 
-        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-            <a href="{% url 'add_events:event_detail_view' event.pk %}" class="btn btn-secondary me-md-2">Отмена</a>
-            <button type="submit" class="btn btn-primary">Сохранить изменения</button>
-        </div>
-    </form>
-</div>
-
-<!-- Модальное окно для управления организаторами -->
-<div id="organizersModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h5>Управление организаторами</h5>
-            <span class="close" onclick="closeOrganizersModal()">&times;</span>
-        </div>
-        <div class="modal-body">
-            <div class="current-organizers mb-3">
-                <h6>Текущие организаторы:</h6>
-                <ul id="organizersList" class="list-group">
-                    <!-- Список будет заполнен через JavaScript -->
-                </ul>
-            </div>
-            <div class="add-organizer">
-                <h6>Добавить организатора:</h6>
-                <button type="button" class="btn btn-outline-success btn-sm" onclick="toggleProUsersList()">
-                    + Добавить ProUser
-                </button>
-                <div id="proUsersList" style="display: none;" class="mt-2">
-                    <!-- Список будет заполнен через JavaScript -->
+        <!-- Модальное окно для организаторов -->
+        <div class="modal fade" id="organizersModal" tabindex="-1" aria-labelledby="organizersModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="organizersModalLabel">Управление организаторами</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="current-organizers mb-3">
+                            <h6>Текущие организаторы:</h6>
+                            <ul id="organizersList" class="list-group" style="display: none;"></ul> <!-- Скрываем список по умолчанию -->
+                        </div>
+                        <div class="add-organizer">
+                            <h6>Добавить организатора:</h6>
+                            <button type="button" class="btn btn-outline-success btn-sm" onclick="toggleProUsersList()">
+                                + Добавить ProUser
+                            </button>
+                            <div id="proUsersList" style="display: none;" class="mt-2"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-{% endblock %}
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Модальное окно для организаторов
+        var modal = document.getElementById('organizersModal');
+        var selectedOrganizers = new Map();
 
-{% block extra_js %}
-<script>
-    // Модальное окно для организаторов
-    var modal = document.getElementById('organizersModal');
-    var selectedOrganizers = new Set();
-
-    function openOrganizersModal() {
-        modal.style.display = 'block';
-        updateOrganizersList();
-    }
-
-    function closeOrganizersModal() {
-        modal.style.display = 'none';
-    }
-
-    function toggleProUsersList() {
-        var proUsersList = document.getElementById('proUsersList');
-        if (proUsersList.style.display === 'none') {
-            loadProUsers();
-            proUsersList.style.display = 'block';
-        } else {
-            proUsersList.style.display = 'none';
+        function openOrganizersModal() {
+            const modal = new bootstrap.Modal(document.getElementById('organizersModal'));
+            modal.show();
         }
-    }
 
-    function loadProUsers() {
-        fetch('{% url "add_events:get_pro_users" %}')
-            .then(response => response.json())
-            .then(data => {
-                const proUsersList = document.getElementById('proUsersList');
-                proUsersList.innerHTML = '';
-                const ul = document.createElement('ul');
-                ul.className = 'list-group';
-
-                data.forEach(user => {
-                    if (!selectedOrganizers.has(user.id)) {
-                        const li = document.createElement('li');
-                        li.className = 'list-group-item';
-                        li.innerHTML = `
-                            ${user.Name_User}
-                            <button class="btn btn-sm btn-outline-primary"
-                                    onclick="addOrganizer(${user.id}, '${user.Name_User}')">
-                                Добавить
-                            </button>
-                        `;
-                        ul.appendChild(li);
-                    }
-                });
-
-                proUsersList.appendChild(ul);
-            });
-    }
-
-    function addOrganizer(userId, userName) {
-        selectedOrganizers.add(userId);
-        updateOrganizersList();
-        updateHiddenField();
-        toggleProUsersList();
-    }
-
-    function removeOrganizer(userId) {
-        selectedOrganizers.delete(userId);
-        updateOrganizersList();
-        updateHiddenField();
-    }
-
-    function updateOrganizersList() {
-        const organizersList = document.getElementById('organizersList');
-        organizersList.innerHTML = '';
-
-        selectedOrganizers.forEach(userId => {
-            const li = document.createElement('li');
-            li.className = 'list-group-item';
-            li.innerHTML = `
-                ${userId}
-                <button class="btn btn-sm btn-outline-danger"
-                        onclick="removeOrganizer(${userId})">
-                    Удалить
-                </button>
-            `;
-            organizersList.appendChild(li);
-        });
-    }
-
-    function updateHiddenField() {
-        const hiddenField = document.querySelector('select[name="additional_organizers"]');
-        const selectedValues = Array.from(selectedOrganizers);
-
-        Array.from(hiddenField.options).forEach(option => {
-            option.selected = selectedValues.includes(parseInt(option.value));
-        });
-    }
-
-    // Инициализация выбранных организаторов из формы
-    document.addEventListener('DOMContentLoaded', function() {
-        const hiddenField = document.querySelector('select[name="additional_organizers"]');
-        Array.from(hiddenField.options).forEach(option => {
-            if (option.selected) {
-                selectedOrganizers.add(parseInt(option.value));
+        function closeOrganizersModal() {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('organizersModal'));
+            if (modal) {
+                modal.hide();
             }
-        });
-        updateOrganizersList();
-    });
-
-    // Закрытие модального окна при клике вне его
-    window.onclick = function(event) {
-        if (event.target == modal) {
-            closeOrganizersModal();
         }
-    }
-</script>
 
-<style>
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.5);
-}
+        function toggleProUsersList() {
+            const proUsersList = document.getElementById('proUsersList');
+            if (proUsersList.style.display === 'none') {
+                loadProUsers();
+                proUsersList.style.display = 'block';
+            } else {
+                proUsersList.style.display = 'none';
+            }
+        }
 
-.modal-content {
-    background-color: #fefefe;
-    margin: 15% auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%;
-    max-width: 500px;
-    border-radius: 5px;
-}
+        function loadProUsers() {
+            fetch('{% url "add_events:get_pro_users" %}')
+                .then(response => response.json())
+                .then(data => {
+                    const proUsersList = document.getElementById('proUsersList');
+                    proUsersList.innerHTML = '';
+                    const ul = document.createElement('ul');
+                    ul.className = 'list-group';
 
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-}
+                    data.forEach(user => {
+                        if (!selectedOrganizers.has(user.id)) {
+                            const li = document.createElement('li');
+                            li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                            li.style.backgroundColor = '#2a3a47'; // Цвет фона
+                            li.innerHTML = `
+                                <span>${user.Name_User}</span>
+                                <button class="btn btn-sm btn-outline-success" onclick="addOrganizer(${user.id}, '${user.Name_User}')">
+                                    <i class="bi bi-plus-lg"></i>
+                                </button>
+                            `;
+                            ul.appendChild(li);
+                        }
+                    });
 
-.close {
-    color: #aaa;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-}
+                    proUsersList.appendChild(ul);
+                });
+        }
 
-.close:hover {
-    color: black;
-}
+        function addOrganizer(userId, userName) {
+            if (!selectedOrganizers.has(userId)) {
+                selectedOrganizers.set(userId, userName); // Сохраняем id и имя
+                updateOrganizersList();
+                updateHiddenField();
+                toggleProUsersList();
+            }
+        }
 
-.list-group-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-</style>
+        function removeOrganizer(userId) {
+            selectedOrganizers.delete(userId); // Удаляем организатора
+            updateOrganizersList();
+            updateHiddenField();
+        }
+
+        function updateOrganizersList() {
+            const organizersList = document.getElementById('organizersList');
+            organizersList.innerHTML = '';
+
+            if (selectedOrganizers.size === 0) {
+                organizersList.style.display = 'none'; // Скрываем список, если нет организаторов
+            } else {
+                organizersList.style.display = 'block'; // Показываем список, если есть организаторы
+                selectedOrganizers.forEach((userName, userId) => {
+                    const li = document.createElement('li');
+                    li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                    li.style.backgroundColor = '#2a3a47'; // Цвет фона
+                    li.innerHTML = `
+                        <span>${userName}</span>
+                        <button class="btn btn-sm btn-outline-danger" onclick="removeOrganizer(${userId})">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    `;
+                    organizersList.appendChild(li);
+                });
+            }
+        }
+
+        function updateHiddenField() {
+            const hiddenField = document.querySelector('select[name="additional_organizers"]');
+            const selectedValues = Array.from(selectedOrganizers.keys());
+
+            Array.from(hiddenField.options).forEach(option => {
+                option.selected = selectedValues.includes(parseInt(option.value));
+            });
+        }
+
+        // Инициализация выбранных организаторов из формы
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize modals
+            const organizersModal = new bootstrap.Modal(document.getElementById('organizersModal'));
+
+            // Add event listeners for modals
+            document.getElementById('organizersModal').addEventListener('show.bs.modal', function () {
+                updateOrganizersList();
+                loadProUsers();
+            });
+
+            // Initialize tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            });
+        });
+
+        function toggleSettings() {
+            const settings = document.getElementById('additionalSettings');
+            if (settings.style.display === 'none') {
+                settings.style.display = 'block';
+            } else {
+                settings.style.display = 'none';
+            }
+        }
+
+        function previewEventPhoto(input) {
+            const file = input.files[0];
+            const preview = document.getElementById('eventPhotoPreview');
+            const label = document.getElementById('eventPhotoLabel');
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    preview.src = e.target.result;
+                    preview.classList.remove('d-none');
+                    label.style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function triggerEventPhotoInput() {
+            const fileInput = document.getElementById('id_Event_photo');
+            fileInput.click();
+        }
+    </script>
+</body>
+</html>
 {% endblock %}
