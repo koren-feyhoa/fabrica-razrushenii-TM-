@@ -6,6 +6,8 @@
     <title>Профиль пользователя</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.2/css/all.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick-theme.min.css">
     <style>
         body {
             background-color: #1B2D34 !important;
@@ -261,6 +263,49 @@
                 max-width: 100%;
             }
         }
+
+        /* Carousel Styles */
+        .event-carousel {
+            margin: 30px 0;
+            position: relative;
+        }
+
+        .slick-prev,
+        .slick-next {
+            width: 40px;
+            height: 40px;
+            background-color: #1a2631;
+            border-radius: 50%;
+            z-index: 1;
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .slick-prev {
+            left: -50px;
+        }
+
+        .slick-next {
+            right: -50px;
+        }
+
+        .slick-prev:hover,
+        .slick-next:hover {
+            background-color: #283845;
+        }
+
+        .slick-dots {
+            bottom: -30px;
+        }
+
+        .slick-dots li button:before {
+            color: white;
+        }
+
+        .slick-dots li.slick-active button:before {
+            color: #02DAEE;
+        }
     </style>
 </head>
 <body class="text-light">
@@ -328,10 +373,47 @@
             <!-- Attended Events Tab -->
             <div class="tab-pane fade show active" id="attended" role="tabpanel" aria-labelledby="attended-tab">
                 {% if attended_events %}
-                    <div id="attendedCarousel" class="carousel slide" data-bs-ride="false" data-bs-interval="false">
-                        <div class="carousel-inner">
+                    {% if attended_events|length > 3 %}
+                        <div class="event-carousel">
+                            <div class="events-container" id="attendedEventsSlider">
+                                {% for event_data in attended_events %}
+                                    <div class="px-2">
+                                        <div class="event-card">
+                                            <img src="{{ event_data.event.Event_photo.url }}" alt="{{ event_data.event.title_event }}" class="event-image">
+                                            <div class="event-info">
+                                                <div class="d-flex justify-content-between mb-2">
+                                                    <div>
+                                                        <i class="far fa-calendar"></i> {{ event_data.event.event_date }}
+                                                    </div>
+                                                    <div>
+                                                        <i class="far fa-clock"></i> {{ event_data.event.event_time }}
+                                                    </div>
+                                                </div>
+                                                <h5>{{ event_data.event.title_event }}</h5>
+                                                {% if event_data.is_past %}
+                                                    {% if event_data.rating %}
+                                                        <div class="rating-display">
+                                                            {% for i in "12345" %}
+                                                                <i class="{% if i|add:'0' <= event_data.rating.rating %}fas{% else %}far{% endif %} fa-star"></i>
+                                                            {% endfor %}
+                                                        </div>
+                                                    {% else %}
+                                                        <button type="button" class="btn btn-review rate-event-btn"
+                                                                data-event-id="{{ event_data.event.id }}">
+                                                            Оставить отзыв
+                                                        </button>
+                                                    {% endif %}
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="row">
                             {% for event_data in attended_events %}
-                                <div class="carousel-item {% if forloop.counter0 < 3 %}active{% endif %}">
+                                <div class="col-md-4 mb-4">
                                     <div class="event-card">
                                         <img src="{{ event_data.event.Event_photo.url }}" alt="{{ event_data.event.title_event }}" class="event-image">
                                         <div class="event-info">
@@ -363,13 +445,7 @@
                                 </div>
                             {% endfor %}
                         </div>
-                        <button class="carousel-control-prev" type="button" data-bs-target="#attendedCarousel" data-bs-slide="prev">
-                            <span class="nav-btn"><i class="fas fa-chevron-left"></i></span>
-                        </button>
-                        <button class="carousel-control-next" type="button" data-bs-target="#attendedCarousel" data-bs-slide="next">
-                            <span class="nav-btn"><i class="fas fa-chevron-right"></i></span>
-                        </button>
-                    </div>
+                    {% endif %}
                 {% else %}
                     <div class="no-events">Посещенных мероприятий нет</div>
                 {% endif %}
@@ -379,10 +455,35 @@
             {% if user.is_pro_user or user.is_super_user %}
                 <div class="tab-pane fade" id="organized" role="tabpanel" aria-labelledby="organized-tab">
                     {% if organized_events %}
-                        <div id="organizedCarousel" class="carousel slide" data-bs-ride="false" data-bs-interval="false">
-                            <div class="carousel-inner">
+                        {% if organized_events|length > 3 %}
+                            <div class="event-carousel">
+                                <div class="events-container" id="organizedEventsSlider">
+                                    {% for event in organized_events %}
+                                        <div class="px-2">
+                                            <div class="event-card">
+                                                <img src="{{ event.Event_photo.url }}" alt="{{ event.title_event }}" class="event-image">
+                                                <div class="event-info">
+                                                    <div class="d-flex justify-content-between mb-2">
+                                                        <div>
+                                                            <i class="far fa-calendar"></i> {{ event.event_date }}
+                                                        </div>
+                                                        <div>
+                                                            <i class="far fa-clock"></i> {{ event.event_time }}
+                                                        </div>
+                                                    </div>
+                                                    <h5>{{ event.title_event }}</h5>
+                                                    <p>Средняя оценка: {{ event.average_rate|floatformat:1 }}</p>
+                                                    <a href="{% url 'add_events:event_reviews' event.pk %}" class="btn btn-review-event">Отзывы</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="row">
                                 {% for event in organized_events %}
-                                    <div class="carousel-item {% if forloop.counter0 < 3 %}active{% endif %}">
+                                    <div class="col-md-4 mb-4">
                                         <div class="event-card">
                                             <img src="{{ event.Event_photo.url }}" alt="{{ event.title_event }}" class="event-image">
                                             <div class="event-info">
@@ -402,13 +503,7 @@
                                     </div>
                                 {% endfor %}
                             </div>
-                            <button class="carousel-control-prev" type="button" data-bs-target="#organizedCarousel" data-bs-slide="prev">
-                                <span class="nav-btn"><i class="fas fa-chevron-left"></i></span>
-                            </button>
-                            <button class="carousel-control-next" type="button" data-bs-target="#organizedCarousel" data-bs-slide="next">
-                                <span class="nav-btn"><i class="fas fa-chevron-right"></i></span>
-                            </button>
-                        </div>
+                        {% endif %}
                     {% else %}
                         <div class="no-events">Организованных мероприятий нет</div>
                     {% endif %}
@@ -471,9 +566,86 @@
         </div>
     </div>
 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        $(document).ready(function(){
+            // Initialize Slick Carousel for attended events
+            $('#attendedEventsSlider').slick({
+                slidesToShow: 3,
+                slidesToScroll: 1,
+                autoplay: false,
+                autoplaySpeed: 3000,
+                dots: true,
+                arrows: true,
+                responsive: [
+                    {
+                        breakpoint: 992,
+                        settings: {
+                            slidesToShow: 2
+                        }
+                    },
+                    {
+                        breakpoint: 576,
+                        settings: {
+                            slidesToShow: 1
+                        }
+                    }
+                ]
+            });
+
+            // Initialize Slick Carousel for organized events
+            $('#organizedEventsSlider').slick({
+                slidesToShow: 3,
+                slidesToScroll: 1,
+                autoplay: false,
+                autoplaySpeed: 3000,
+                dots: true,
+                arrows: true,
+                responsive: [
+                    {
+                        breakpoint: 992,
+                        settings: {
+                            slidesToShow: 2
+                        }
+                    },
+                    {
+                        breakpoint: 576,
+                        settings: {
+                            slidesToShow: 1
+                        }
+                    }
+                ]
+            });
+
+            // Обработчик переключения вкладок
+            $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
+                if (e.target.id === 'organized-tab') {
+                    const slider = $('#organizedEventsSlider');
+                    if (slider.length) {
+                        slider.slick('slickGoTo', 0);
+                        slider.slick('refresh');
+                    }
+                } else if (e.target.id === 'attended-tab') {
+                    const slider = $('#attendedEventsSlider');
+                    if (slider.length) {
+                        slider.slick('slickGoTo', 0);
+                        slider.slick('refresh');
+                    }
+                }
+            });
+
+            // Инициализация слайдеров при первом открытии вкладок
+            $('#organized-tab, #attended-tab').on('click', function() {
+                setTimeout(function() {
+                    const slider = $(this.id === 'organized-tab' ? '#organizedEventsSlider' : '#attendedEventsSlider');
+                    if (slider.length) {
+                        slider.slick('setPosition');
+                    }
+                }.bind(this), 0);
+            });
+
             // Get modals
             const ratingModal = new bootstrap.Modal(document.getElementById('ratingModal'));
             const successModal = new bootstrap.Modal(document.getElementById('successModal'));
