@@ -1,4 +1,5 @@
 from django import template
+from django.template.defaultfilters import register
 
 register = template.Library()
 
@@ -12,10 +13,9 @@ def get_field(form, field_name):
 
 @register.filter
 def get_item(dictionary, key):
-    try:
-        return dictionary.get(key)
-    except (AttributeError, KeyError, TypeError):
+    if dictionary is None:
         return None
+    return dictionary.get(str(key)) if isinstance(key, int) else dictionary.get(key)
 
 @register.filter
 def add(value, arg):
@@ -33,3 +33,13 @@ def startswith(text, starts):
     if isinstance(text, str):
         return text.startswith(starts)
     return False
+
+@register.filter
+def get_user_answers(extra_infos, user):
+    """Получает все ответы пользователя на дополнительные вопросы"""
+    from add_event.models import UserAnswer
+    answers = UserAnswer.objects.filter(
+        user=user,
+        extra_info__in=extra_infos
+    ).select_related('extra_info')
+    return answers if answers.exists() else None

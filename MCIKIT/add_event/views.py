@@ -280,57 +280,30 @@ def event_detail_view(request, pk):
     # Получаем ответы участников
     participants_answers = {}
     
-    print("\nDebug: Starting team processing...")
+    # Получаем все ответы на вопросы (включая командные и индивидуальные)
+    all_answers = UserAnswer.objects.filter(
+        extra_info__event=event
+    ).select_related('user', 'extra_info').prefetch_related('team_members')
     
-    # Сначала получаем все команды
-    team_answers = UserAnswer.objects.filter(
-        extra_info__event=event,
-        extra_info__field_type='team'
-    ).select_related('user', 'extra_info')
-    
-    print(f"Debug: Found {team_answers.count()} team answers")
-    
-    # Группируем ответы по командам
-    for answer in team_answers:
-        print(f"\nDebug: Processing answer for user {answer.user.Name_User}")
-        print(f"Debug: Team name: {answer.team_name}")
-        print(f"Debug: Is captain: {answer.is_team_captain}")
-        print(f"Debug: Team members: {[m.Name_User for m in answer.team_members.all()]}")
-        
+    # Группируем ответы по пользователям
+    for answer in all_answers:
         if answer.user.id not in participants_answers:
             participants_answers[answer.user.id] = []
-            
-        answer_data = {
-            'field_type': 'team',
-            'is_team_captain': answer.is_team_captain,
-            'team_name': answer.team_name,
-            'team_members': list(answer.team_members.all())
-        }
-        participants_answers[answer.user.id].append(answer_data)
         
-        # Добавляем ответы на другие вопросы для капитана
-        if answer.is_team_captain:
-            other_answers = UserAnswer.objects.filter(
-                user=answer.user,
-                extra_info__event=event
-            ).exclude(extra_info__field_type='team')
-            
-            print(f"Debug: Found {other_answers.count()} other answers for captain")
-            
-            for other_answer in other_answers:
-                answer_data = {
-                    'field_type': other_answer.extra_info.field_type,
-                    'question': other_answer.extra_info.question,
-                    'answer': other_answer.answer,
-                    'team_name': answer.team_name
-                }
-                participants_answers[answer.user.id].append(answer_data)
-    
-    print("\nDebug: Final participants_answers:")
-    for user_id, answers in participants_answers.items():
-        print(f"User ID {user_id}:")
-        for answer in answers:
-            print(f"  - {answer}")
+        answer_data = {
+            'field_type': answer.extra_info.field_type,
+            'question': answer.extra_info.question,
+            'answer': answer.answer,
+        }
+        
+        if answer.extra_info.field_type == 'team':
+            answer_data.update({
+                'is_team_captain': answer.is_team_captain,
+                'team_name': answer.team_name,
+                'team_members': list(answer.team_members.all())
+            })
+        
+        participants_answers[answer.user.id].append(answer_data)
 
     context = {
         'event': event,
@@ -356,20 +329,24 @@ def event_register(request, pk):
     
     event = get_object_or_404(Event, pk=pk)
     if request.method == 'POST':
-        # Проверяем, что запрос является AJAX
-        if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({'error': 'Invalid request'}, status=400)
-            
         if event.registration_closed:
-            return JsonResponse({'error': 'Регистрация закрыта'}, status=400)
+            messages.error(request, 'Регистрация закрыта')
+            return redirect('add_events:event_detail_view', pk=pk)
 
         if event.max_members > 0 and event.get_registered_count() >= event.max_members:
-            return JsonResponse({'error': 'Достигнут лимит участников'}, status=400)
+            messages.error(request, 'Достигнут лимит участников')
+            return redirect('add_events:event_detail_view', pk=pk)
 
         extra_infos = event.extra_info.all()
         print('Extra infos:', extra_infos)
         
+        # Проверяем, есть ли дополнительные вопросы
         if extra_infos.exists():
+            # Если запрос не AJAX при наличии доп. вопросов
+            if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                messages.error(request, 'Пожалуйста, заполните все необходимые поля')
+                return redirect('add_events:event_detail_view', pk=pk)
+                
             form = UserAnswerForm(request.POST, extra_infos=extra_infos, user=request.user)
             print('Form is bound:', form.is_bound)
             print('Form data:', form.data)
@@ -434,9 +411,6 @@ def event_register(request, pk):
                                     )
                                     print('Answer created for:', extra_info.question)
                         
-                        event.users_members.add(request.user)
-                        print('User added to event members')
-                        
                         return JsonResponse({
                             'success': True,
                             'message': 'Вы успешно зарегистрировались на мероприятие'
@@ -454,15 +428,12 @@ def event_register(request, pk):
             # Если нет дополнительных вопросов, просто регистрируем пользователя
             try:
                 event.users_members.add(request.user)
-                return JsonResponse({
-                    'success': True,
-                    'message': 'Вы успешно зарегистрировались на мероприятие'
-                })
+                messages.success(request, 'Вы успешно зарегистрировались на мероприятие')
+                return redirect('add_events:event_detail_view', pk=pk)
             except Exception as e:
                 print('Error during registration:', str(e))
-                return JsonResponse({
-                    'error': 'Произошла ошибка при регистрации. Пожалуйста, попробуйте еще раз.'
-                }, status=500)
+                messages.error(request, 'Произошла ошибка при регистрации. Пожалуйста, попробуйте еще раз.')
+                return redirect('add_events:event_detail_view', pk=pk)
 
     return redirect('add_events:event_detail_view', pk=pk)
 
@@ -529,7 +500,7 @@ def event_delete(request, pk):
         if event.is_user_organizer(request.user):
             event.delete()
             messages.success(request, 'Мероприятие успешно удалено')
-            return redirect('add_events:event_list')
+            return redirect('main')
         return HttpResponseForbidden('У вас нет прав для удаления этого мероприятия')
     return HttpResponseForbidden()
 

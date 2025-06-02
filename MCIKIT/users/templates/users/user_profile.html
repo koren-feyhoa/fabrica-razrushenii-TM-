@@ -239,7 +239,7 @@
         }
 
         .col-auto{
-            fony-size: 14px;
+            font-size: 14px;
         }
 
         /* Responsive carousel */
@@ -390,16 +390,31 @@
                                                     </div>
                                                 </div>
                                                 <h5>{{ event_data.event.title_event }}</h5>
-                                                {% if event_data.is_past %}
+                                                {% if event_data.has_started %}
                                                     {% if event_data.rating %}
                                                         <div class="rating-display">
-                                                            {% for i in "12345" %}
-                                                                <i class="{% if i|add:'0' <= event_data.rating.rating %}fas{% else %}far{% endif %} fa-star"></i>
-                                                            {% endfor %}
+                                                            <div class="stars mb-2">
+                                                                {% for i in "12345" %}
+                                                                    {% if forloop.counter <= event_data.rating.rating %}
+                                                                        <i class="fas fa-star text-warning"></i>
+                                                                    {% else %}
+                                                                        <i class="far fa-star"></i>
+                                                                    {% endif %}
+                                                                {% endfor %}
+                                                                <span class="ms-2">{{ event_data.rating.rating }}/5</span>
+                                                            </div>
+                                                            {% if event_data.rating.comment %}
+                                                                <div class="comment mb-3">
+                                                                    <p class="mb-1 text-white-50">Ваш комментарий:</p>
+                                                                    <p class="mb-0 text-white">{{ event_data.rating.comment }}</p>
+                                                                </div>
+                                                            {% endif %}
+                                                            <button class="btn btn-review-event" onclick="showRatingModal({{ event_data.event.id }}, {{ event_data.rating.rating }}, '{{ event_data.rating.comment|default:'' }}')">
+                                                                Изменить отзыв
+                                                            </button>
                                                         </div>
                                                     {% else %}
-                                                        <button type="button" class="btn btn-review rate-event-btn"
-                                                                data-event-id="{{ event_data.event.id }}">
+                                                        <button class="btn btn-review-event" onclick="showRatingModal({{ event_data.event.id }})">
                                                             Оставить отзыв
                                                         </button>
                                                     {% endif %}
@@ -426,16 +441,31 @@
                                                 </div>
                                             </div>
                                             <h5>{{ event_data.event.title_event }}</h5>
-                                            {% if event_data.is_past %}
+                                            {% if event_data.has_started %}
                                                 {% if event_data.rating %}
                                                     <div class="rating-display">
-                                                        {% for i in "12345" %}
-                                                            <i class="{% if i|add:'0' <= event_data.rating.rating %}fas{% else %}far{% endif %} fa-star"></i>
-                                                        {% endfor %}
+                                                        <div class="stars mb-2">
+                                                            {% for i in "12345" %}
+                                                                {% if forloop.counter <= event_data.rating.rating %}
+                                                                    <i class="fas fa-star text-warning"></i>
+                                                                {% else %}
+                                                                    <i class="far fa-star"></i>
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                            <span class="ms-2">{{ event_data.rating.rating }}/5</span>
+                                                        </div>
+                                                        {% if event_data.rating.comment %}
+                                                            <div class="comment mb-3">
+                                                                <p class="mb-1 text-white-50">Ваш комментарий:</p>
+                                                                <p class="mb-0 text-white">{{ event_data.rating.comment }}</p>
+                                                            </div>
+                                                        {% endif %}
+                                                        <button class="btn btn-review-event" onclick="showRatingModal({{ event_data.event.id }}, {{ event_data.rating.rating }}, '{{ event_data.rating.comment|default:'' }}')">
+                                                            Изменить отзыв
+                                                        </button>
                                                     </div>
                                                 {% else %}
-                                                    <button type="button" class="btn btn-review rate-event-btn"
-                                                            data-event-id="{{ event_data.event.id }}">
+                                                    <button class="btn btn-review-event" onclick="showRatingModal({{ event_data.event.id }})">
                                                         Оставить отзыв
                                                     </button>
                                                 {% endif %}
@@ -447,7 +477,9 @@
                         </div>
                     {% endif %}
                 {% else %}
-                    <div class="no-events">Посещенных мероприятий нет</div>
+                    <div class="text-center">
+                        <p>Вы еще не посетили ни одного мероприятия</p>
+                    </div>
                 {% endif %}
             </div>
 
@@ -511,40 +543,37 @@
             {% endif %}
         </div>
 
-        <!-- Review Modal -->
+        <!-- Rating Modal -->
         <div class="modal fade" id="ratingModal" tabindex="-1" aria-labelledby="ratingModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content bg-dark text-light">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="ratingModalLabel">Оставить отзыв</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
                     <div class="modal-body">
-                        <h5 class="modal-title mb-4">Отзыв</h5>
                         <form id="ratingForm">
+                            {% csrf_token %}
                             <div class="mb-3">
-                                <label class="form-label">
-                                    <i class="far fa-thumbs-up"></i> Что вам понравилось?
-                                </label>
-                                <textarea class="form-control bg-dark text-light" rows="2" name="likes" placeholder="Напишите свой ответ..."></textarea>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">
-                                    <i class="far fa-thumbs-down"></i> Что вам не понравилось?
-                                </label>
-                                <textarea class="form-control bg-dark text-light" rows="2" name="dislikes" placeholder="Напишите свой ответ..."></textarea>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">
-                                    <i class="far fa-star"></i> Как бы вы оценили мероприятие?
-                                </label>
+                                <label class="form-label">Оценка:</label>
                                 <div class="star-rating">
-                                    <i class="far fa-star" data-rating="1"></i>
-                                    <i class="far fa-star" data-rating="2"></i>
-                                    <i class="far fa-star" data-rating="3"></i>
-                                    <i class="far fa-star" data-rating="4"></i>
-                                    <i class="far fa-star" data-rating="5"></i>
+                                    <i class="fas fa-star" data-rating="1"></i>
+                                    <i class="fas fa-star" data-rating="2"></i>
+                                    <i class="fas fa-star" data-rating="3"></i>
+                                    <i class="fas fa-star" data-rating="4"></i>
+                                    <i class="fas fa-star" data-rating="5"></i>
                                 </div>
-                                <input type="hidden" name="rating" id="ratingValue">
+                                <input type="hidden" name="rating" id="ratingInput" required>
                             </div>
-                            <button type="submit" class="btn btn-submit w-100 mt-3">Оценить</button>
+                            <div class="mb-3">
+                                <label for="commentInput" class="form-label">Комментарий:</label>
+                                <textarea class="form-control" id="commentInput" name="comment" rows="3"></textarea>
+                            </div>
                         </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                        <button type="button" class="btn btn-primary" onclick="submitRating()">Отправить</button>
                     </div>
                 </div>
             </div>
@@ -670,7 +699,7 @@
 
                 star.addEventListener('click', function() {
                     selectedRating = this.dataset.rating;
-                    document.getElementById('ratingValue').value = selectedRating;
+                    document.getElementById('ratingInput').value = selectedRating;
                     highlightStars(selectedRating);
                 });
             });
@@ -679,11 +708,9 @@
                 stars.forEach(star => {
                     const starRating = star.dataset.rating;
                     if (starRating <= rating) {
-                        star.classList.remove('far');
-                        star.classList.add('fas', 'active');
+                        star.classList.add('active');
                     } else {
-                        star.classList.remove('fas', 'active');
-                        star.classList.add('far');
+                        star.classList.remove('active');
                     }
                 });
             }
@@ -705,28 +732,28 @@
             ratingForm.addEventListener('submit', function(e) {
                 e.preventDefault();
 
-                const rating = document.getElementById('ratingValue').value;
-                const likes = ratingForm.querySelector('textarea[name="likes"]').value;
-                const dislikes = ratingForm.querySelector('textarea[name="dislikes"]').value;
+                const rating = document.getElementById('ratingInput').value;
+                const comment = document.getElementById('commentInput').value;
 
                 if (!rating) {
                     alert('Пожалуйста, поставьте оценку');
                     return;
                 }
 
-                const formData = new FormData();
-                formData.append('rating', rating);
-                formData.append('likes', likes);
-                formData.append('dislikes', dislikes);
-
                 fetch(`/users/rate_event/${currentEventId}/`, {
                     method: 'POST',
-                    body: formData,
                     headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
                         'X-CSRFToken': getCookie('csrftoken')
-                    }
+                    },
+                    body: `rating=${rating}&comment=${encodeURIComponent(comment)}`
                 })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(data => Promise.reject(data));
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     if (data.success) {
                         ratingModal.hide();
@@ -752,15 +779,84 @@
                             }, 2000);
                         }, 300);
                     } else {
-                        alert(data.error || 'Произошла ошибка при сохранении оценки');
+                        alert(data.message || 'Произошла ошибка при отправке отзыва');
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('Произошла ошибка при сохранении оценки');
+                    alert(error.message || 'Произошла ошибка при отправке отзыва');
                 });
             });
 
+            // Rating modal functionality
+            function showRatingModal(eventId, existingRating = null, existingComment = '') {
+                currentEventId = eventId;
+                
+                // Reset form
+                document.getElementById('ratingForm').reset();
+                
+                // Set existing rating if available
+                if (existingRating) {
+                    selectedRating = existingRating;
+                    document.getElementById('ratingInput').value = existingRating;
+                    highlightStars(existingRating);
+                } else {
+                    selectedRating = 0;
+                    highlightStars(0);
+                }
+                
+                // Set existing comment if available
+                document.getElementById('commentInput').value = existingComment || '';
+                
+                // Show modal
+                const ratingModal = new bootstrap.Modal(document.getElementById('ratingModal'));
+                ratingModal.show();
+            }
+
+            // Make showRatingModal available globally
+            window.showRatingModal = showRatingModal;
+
+            // Submit rating function
+            function submitRating() {
+                const rating = document.getElementById('ratingInput').value;
+                const comment = document.getElementById('commentInput').value;
+
+                if (!rating) {
+                    alert('Пожалуйста, поставьте оценку');
+                    return;
+                }
+
+                fetch(`/users/rate_event/${currentEventId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: `rating=${rating}&comment=${encodeURIComponent(comment)}`
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(data => Promise.reject(data));
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        location.reload(); // Перезагружаем страницу для обновления отзывов
+                    } else {
+                        alert(data.message || 'Произошла ошибка при отправке отзыва');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert(error.message || 'Произошла ошибка при отправке отзыва');
+                });
+            }
+
+            // Make submitRating available globally
+            window.submitRating = submitRating;
+
+            // Function to get CSRF token from cookies
             function getCookie(name) {
                 let cookieValue = null;
                 if (document.cookie && document.cookie !== '') {

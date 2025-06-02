@@ -117,9 +117,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-});
+
     // Функция отправки формы
-    function submitForm(event) {
+    window.submitForm = function(event) {
         event.preventDefault();
         console.log('Form submission started');
         
@@ -139,16 +139,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
             }
         })
-        .then(response => {
-            console.log('Response status:', response.status);
-            return response.json();
-        })
+        .then(response => response.json())
         .then(data => {
-            console.log('Response data:', data);
-            if (data.error) {
-                alert(data.error);
-            } else {
+            if (data.success) {
                 window.location.reload();
+            } else if (data.error) {
+                alert(data.error);
+            } else if (data.errors) {
+                const errorMessages = Object.values(data.errors).flat();
+                alert(errorMessages.join('\n'));
             }
         })
         .catch(error => {
@@ -157,7 +156,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         return false;
-    }
+    };
+});
 </script>
 
 <style>
@@ -188,50 +188,95 @@ document.addEventListener('DOMContentLoaded', function() {
 .selected-users-list {
     margin-top: 10px;
 }
+
+.form-check {
+    margin-bottom: 10px;
+    padding: 10px;
+    background-color: #243B44;
+    border-radius: 8px;
+}
+
+.form-check-input {
+    margin-right: 10px;
+}
+
+.form-check-label {
+    color: #ffffff;
+    cursor: pointer;
+}
+
+.form-check:hover {
+    background-color: #2a4550;
+}
 </style>
 
 <!-- Modal -->
 <div class="modal fade" id="questionsModal" tabindex="-1" aria-labelledby="questionsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="questionsModalLabel">Дополнительные вопросы</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title" id="questionsModalLabel">Регистрация на мероприятие</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                <form method="post" id="questionsForm" action="{% url 'add_events:event_register' event.pk %}" onsubmit="return submitForm(event)">
-                    {% csrf_token %}
-                    {% for field in form %}
-                        <div class="mb-3">
-                            {% if field.name|startswith:'team_name_' %}
-                                <div class="mb-3">
-                                    <label class="form-label">Название команды</label>
-                                    <input type="text" name="{{ field.html_name }}" class="form-control" required>
+            <form id="questionsForm" action="{% url 'add_events:event_register' event.pk %}" method="post" onsubmit="return submitForm(event);">
+                {% csrf_token %}
+                <div class="modal-body">
+                    {% for info in extra_infos %}
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">{{ info.question }}</label>
+                            {% if info.field_type == 'text' %}
+                                <input type="text" name="extra_{{ info.id }}" class="form-control" required>
+                            {% elif info.field_type == 'choice' %}
+                                <div class="choices-container">
+                                    {% if info.allow_multiple %}
+                                        {% for choice in info.choices_list.all %}
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="extra_{{ info.id }}" value="{{ choice.id }}" id="choice_{{ choice.id }}">
+                                                <label class="form-check-label" for="choice_{{ choice.id }}">
+                                                    {{ choice.value }}
+                                                </label>
+                                            </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        {% for choice in info.choices_list.all %}
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="extra_{{ info.id }}" value="{{ choice.id }}" id="choice_{{ choice.id }}" required>
+                                                <label class="form-check-label" for="choice_{{ choice.id }}">
+                                                    {{ choice.value }}
+                                                </label>
+                                            </div>
+                                        {% endfor %}
+                                    {% endif %}
                                 </div>
-                            {% elif field.name|startswith:'team_members_' %}
-                                <div class="mb-3">
-                                    <label class="form-label">Участники команды</label>
-                                    <div class="position-relative">
-                                        <input type="text" 
-                                               class="form-control search-users mb-2" 
-                                               placeholder="Поиск по имени, логину или группе"
-                                               id="user_search_{{ field.id_for_label }}"
-                                               data-field-id="{{ field.id_for_label }}">
-                                        <div class="search-results" id="search_results_{{ field.id_for_label }}"></div>
+                            {% elif info.field_type == 'team' %}
+                                <div class="team-section">
+                                    <div class="mb-3">
+                                        <label class="form-label">Название команды</label>
+                                        <input type="text" name="team_name_{{ info.id }}" class="form-control" required>
                                     </div>
-                                    <ul class="list-group" id="selected_members_{{ field.id_for_label }}"></ul>
-                                    <select id="{{ field.id_for_label }}" name="{{ field.html_name }}" multiple style="display: none;"></select>
-                                    <small class="form-text text-muted">{{ field.help_text }}</small>
+                                    <div class="mb-3">
+                                        <label class="form-label">Поиск участников</label>
+                                        <input type="text" id="user_search_{{ info.id }}" class="form-control search-users" data-field-id="team_members_{{ info.id }}" placeholder="Введите имя участника">
+                                        <div id="search_results_{{ info.id }}" class="search-results"></div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Выбранные участники</label>
+                                        <ul id="selected_members_{{ info.id }}" class="list-group selected-users-list"></ul>
+                                        <select id="team_members_{{ info.id }}" name="team_members_{{ info.id }}" multiple style="display: none;"></select>
+                                        <small class="form-text text-muted">
+                                            Минимум {{ info.min_team_size|add:"-1" }}, максимум {{ info.max_team_size|add:"-1" }} участников (вы будете капитаном)
+                                        </small>
+                                    </div>
                                 </div>
                             {% endif %}
                         </div>
                     {% endfor %}
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                <button type="submit" form="questionsForm" class="btn btn-primary">Зарегистрироваться</button>
-            </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-success">Зарегистрироваться</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
