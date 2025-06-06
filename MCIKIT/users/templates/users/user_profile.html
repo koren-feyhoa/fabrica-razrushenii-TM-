@@ -9,6 +9,25 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick-theme.min.css">
     <style>
+        .home-link {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #283845;
+    color: #ffffff;
+    text-decoration: none;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    margin-bottom: 20px;
+    border: 1px solid #384856;
+}
+
+.home-link:hover {
+    background-color: #384856;
+    text-decoration: none;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
         body {
             background-color: #1B2D34 !important;
             color: #ffffff !important;
@@ -313,7 +332,7 @@
         <!-- Header with logo -->
         <header class="text-center mb-5">
             <img src="/static/users/image/logo.png" alt="Логотип" class="logo">
-            <a href="{% url 'main' %}" class="home-link">Главная страница</a>
+            <a href="{% url 'start_page' %}" class="home-link">Главная страница</a> 
         </header>
 
         <!-- User Profile Section -->
@@ -329,31 +348,33 @@
                     </div>
                 </div>
                 <div class="col">
-                    <h3>{{ user.Name_User }}</h3>
-                    <p class="mb-1">{{ user.Number_of_group }}</p>
-                    <p>{{ user.username }}</p>
-                    {% if user.is_super_user %}
-                    <p style="color: #02DAEE">Глава КМО</p>
-                    {% elif user.is_pro_user %}
-                    <p style="color: #02DAEE;">Активист МЦ ИКИТ</p>
-                    {% endif %}
-                </div>
+    <h3>{{ user.Name_User }}</h3>
+    <p class="mb-1">{{ user.Number_of_group }}</p>
+    <p>{{ user.username }}</p>
+    {% if user.is_superuser %}
+        <p style="color: #02DAEE">Глава КМО</p>
+    {% elif user.is_staff %}
+        <p style="color: #02DAEE;">Активист МЦ ИКИТ</p>
+    {% endif %}
+</div>
                 <div class="col-auto d-flex flex-column align-items-end">
-                    <div class="d-flex gap-2 mb-2">
-                        <a href="{% url 'users:user_settings' %}" class="btn btn-outline-secondary">
-                            <i class="fas fa-cog"></i>
-                        </a>
-                        <form action="{% url 'users:logout' %}" method="post" style="display:inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-outline-secondary">
-                                Выйти из аккаунта <i class="fas fa-sign-out-alt ms-2"></i>
-                            </button>
-                        </form>
-                    </div>
-                    {% if user.is_pro_user or user.is_super_user %}
-                        <a href="{% url 'add_events:event_create' %}" class="btn btn-organize w-100">Организовать мероприятие</a>
-                    {% endif %}
-                </div>
+    <div class="d-flex gap-2 mb-2">
+        <a href="{% url 'users:user_settings' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-cog"></i>
+        </a>
+       <form action="{% url 'start_page' %}" method="post" style="display:inline;">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-outline-secondary">
+        Выйти из аккаунта <i class="fas fa-sign-out-alt ms-2"></i>
+    </button>
+</form>
+    </div>
+    {% if user.is_pro_user or user.is_super_user %}
+        <a href="{% url 'add_events:event_create' %}" class="btn btn-organize w-100">
+            Организовать мероприятие
+        </a>
+    {% endif %}
+</div>
             </div>
         </div>
 
