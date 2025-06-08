@@ -72,6 +72,13 @@ class Event(models.Model):
     class Meta:
         verbose_name = 'Мероприятие'
 
+    def is_user_organizer(self, user):
+        """Проверяет, является ли пользователь организатором мероприятия"""
+        if not user.is_authenticated:
+            return False
+        EventOrganizer = apps.get_model('users', 'EventOrganizer')
+        return EventOrganizer.objects.filter(event=self, user=user).exists()
+
 
 
 class EventRating(models.Model):

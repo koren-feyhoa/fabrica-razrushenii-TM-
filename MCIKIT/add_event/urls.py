@@ -20,6 +20,9 @@ app_name = 'add_events'
 urlpatterns = [
     path('', EventListView.as_view(), name='event_list'),
     path('add/', add_event, name='add_event'),
+    path('<int:pk>/reviews/', views.EventReviewsView.as_view(), name='event_reviews'),
+    path('<int:pk>/add_review/', views.add_review, name='add_review'),
+    path('<int:review_id>/delete_review/', views.delete_review, name='delete_review'),
     path('create/', EventCreateView.as_view(), name='event_create'),
     path('<int:pk>/', event_detail_view, name='event_detail_view'),
     path('search_users/', search_users, name='search_users'),
@@ -30,5 +33,4 @@ urlpatterns = [
     path('<int:pk>/delete/', event_delete, name='event_delete'),
     path('<int:pk>/toggle-registration/', views.toggle_registration, name='toggle_registration'),
     path('get-pro-users/', get_pro_users, name='get_pro_users'),
-    path('<int:pk>/reviews/', EventReviewsView.as_view(), name='event_reviews'),
 ]

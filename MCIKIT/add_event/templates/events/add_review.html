@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card" style="background-color: #243B44; border-radius: 15px;">
+        <div class="card-header" style="background-color: #1a2631; border-bottom: 1px solid #02DAEE;">
+            <h2 style="color: #02DAEE;">{% if user_review_exists %}Обновить отзыв{% else %}Оставить отзыв{% endif %} о мероприятии: {{ event.title_event }}</h2>
+        </div>
+        <div class="card-body">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            {% if user_review_exists %}
+                <div class="alert alert-info" style="background-color: #1a2631; border-color: #02DAEE; color: white;">
+                    <h4>Ваш текущий отзыв:</h4>
+                    <div class="mb-2">
+                        <strong>Оценка:</strong>
+                        {% for i in "12345" %}
+                            <i class="fas fa-star {% if forloop.counter <= existing_review.rating %}text-warning{% else %}text-secondary{% endif %}"></i>
+                        {% endfor %}
+                        <span class="ms-2">{{ existing_review.rating }}/5</span>
+                    </div>
+                    {% if existing_review.likes %}
+                        <div class="mb-2">
+                            <strong>Понравилось:</strong>
+                            <p>{{ existing_review.likes }}</p>
+                        </div>
+                    {% endif %}
+                    {% if existing_review.dislikes %}
+                        <div class="mb-2">
+                            <strong>Не понравилось:</strong>
+                            <p>{{ existing_review.dislikes }}</p>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label" style="color: white;">Оценка (от 1 до 5)</label>
+                    <select class="form-select" name="rating" required style="background-color: #1a2631; color: white; border-color: #384856;">
+                        <option value="">Выберите оценку</option>
+                        <option value="5">5 - Отлично</option>
+                        <option value="4">4 - Хорошо</option>
+                        <option value="3">3 - Удовлетворительно</option>
+                        <option value="2">2 - Плохо</option>
+                        <option value="1">1 - Ужасно</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="likes" class="form-label" style="color: white;">Что вам понравилось</label>
+                    <textarea class="form-control" id="likes" name="likes" rows="3"
+                              placeholder="Опишите, что вам понравилось в мероприятии"
+                              style="background-color: #1a2631; color: white; border-color: #384856;"></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label for="dislikes" class="form-label" style="color: white;">Что можно улучшить</label>
+                    <textarea class="form-control" id="dislikes" name="dislikes" rows="3"
+                              placeholder="Опишите, что вам не понравилось или что можно улучшить"
+                              style="background-color: #1a2631; color: white; border-color: #384856;"></textarea>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'add_events:event_reviews' event.id %}" class="btn btn-secondary" style="background-color: #384856; border-color: #384856;">
+                        Отмена
+                    </a>
+                    <button type="submit" class="btn btn-primary" style="background-color: #02DAEE; border: none;">
+                        Отправить отзыв
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Основные стили из проекта */
+    body {
+        background-color: #1B2D34 !important;
+        color: #ffffff !important;
+        font-family: Roboto, sans-serif;
+    }
+
+    .logo {
+        height: 186px;
+        margin-top: 5px 0;
+    }
+
+    .home-link {
+        display: inline-block;
+        padding: 10px 20px;
+        background-color: #283845;
+        color: #ffffff;
+        text-decoration: none;
+        border-radius: 20px;
+        transition: all 0.3s ease;
+        margin-bottom: 20px;
+        border: 1px solid #384856;
+    }
+
+    .home-link:hover {
+        background-color: #384856;
+        text-decoration: none;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        color: #ffffff;
+    }
+
+    .profile-container {
+        background-color: #243B44;
+        border-radius: 15px;
+        padding: 40px;
+        margin-bottom: 30px;
+    }
+
+    /* Стили формы отзыва */
+    .review-form-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .review-form .form-label {
+        font-size: 18px;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+    }
+
+    .review-form .form-control {
+        background-color: #1a2631 !important;
+        border: 1px solid #384856;
+        color: white !important;
+        border-radius: 10px;
+        padding: 15px;
+        font-size: 16px;
+    }
+
+    .review-form .form-control:focus {
+        border-color: #02DAEE;
+        box-shadow: 0 0 0 0.25rem rgba(2, 218, 238, 0.25);
+    }
+
+    /* Стили для звездного рейтинга */
+    .star-rating {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: center;
+        margin: 20px 0 30px;
+    }
+
+    .star-rating input {
+        display: none;
+    }
+
+    .star-rating label {
+        font-size: 40px;
+        color: #889199;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin: 0 5px;
+    }
+
+    .star-rating input:checked ~ label,
+    .star-rating input:hover ~ label,
+    .star-rating label:hover,
+    .star-rating label:hover ~ label {
+        color: #FFD700;
+    }
+
+    /* Стили кнопок */
+    .btn-submit {
+        background-color: #02DAEE;
+        color: #1B2D34;
+        border: none;
+        border-radius: 30px;
+        padding: 12px 35px;
+        font-size: 18px;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+    .btn-submit:hover {
+        background-color: #00B4C5;
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 180, 197, 0.3);
+    }
+
+    .btn-cancel {
+        background-color: transparent;
+        color: #ffffff;
+        border: 1px solid #889199;
+        border-radius: 30px;
+        padding: 12px 35px;
+        font-size: 18px;
+        transition: all 0.3s;
+    }
+
+    .btn-cancel:hover {
+        background-color: #283845;
+        color: #ffffff;
+        border-color: #02DAEE;
+    }
+
+    /* Адаптивность */
+    @media (max-width: 768px) {
+        .profile-container {
+            padding: 25px;
+        }
+
+        .star-rating label {
+            font-size: 32px;
+        }
+
+        .btn-submit,
+        .btn-cancel {
+            padding: 10px 25px;
+            font-size: 16px;
+            display: block;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+
+        .form-actions {
+            display: flex;
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}

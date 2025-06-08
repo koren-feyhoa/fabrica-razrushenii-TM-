@@ -12,7 +12,7 @@ from django.db.models import Q
 from django.db import transaction
 
 from .forms import EventForm, ExtraInfoForm, ChoiceForm, UserAnswerForm
-from .models import Event, ExtraInfo, Choice, UserAnswer
+from .models import Event, ExtraInfo, Choice, UserAnswer, EventRating
 from users.models import EventOrganizer, User
 
 
@@ -579,3 +579,147 @@ def delete_choice(request, choice_id):
     event_id = choice.extra_info.event.id
     choice.delete()
     return redirect('event_detail', event_id=event_id)
+
+
+@login_required
+def add_review(request, pk):
+    event = get_object_or_404(Event, pk=pk)
+
+    # Проверяем, не оставлял ли уже пользователь отзыв
+    existing_review = EventRating.objects.filter(user=request.user, event=event).first()
+
+    if request.method == 'POST':
+        if existing_review:
+            messages.error(request, 'Вы уже оставляли отзыв на это мероприятие')
+            return redirect(reverse('add_events:event_reviews', kwargs={'pk': pk}))
+
+        rating = request.POST.get('rating')
+        likes = request.POST.get('likes', '').strip()
+        dislikes = request.POST.get('dislikes', '').strip()
+
+        # Валидация данных
+        if not rating:
+            messages.error(request, 'Пожалуйста, укажите оценку')
+            return redirect(reverse('add_events:add_review', kwargs={'pk': pk}))
+
+        try:
+            rating = int(rating)
+            if rating < 1 or rating > 5:
+                raise ValueError
+        except ValueError:
+            messages.error(request, 'Оценка должна быть числом от 1 до 5')
+            return redirect(reverse('add_events:add_review', kwargs={'pk': pk}))
+
+        # Создаем или обновляем отзыв
+        try:
+            if existing_review:
+                # Обновляем существующий отзыв
+                existing_review.rating = rating
+                existing_review.likes = likes if likes else None
+                existing_review.dislikes = dislikes if dislikes else None
+                existing_review.save()
+                messages.success(request, 'Ваш отзыв успешно обновлен!')
+            else:
+                # Создаем новый отзыв
+                EventRating.objects.create(
+                    user=request.user,
+                    event=event,
+                    rating=rating,
+                    likes=likes if likes else None,
+                    dislikes=dislikes if dislikes else None
+                )
+                messages.success(request, 'Ваш отзыв успешно сохранен!')
+
+            return redirect(reverse('add_events:event_reviews', kwargs={'pk': pk}))
+        except Exception as e:
+            messages.error(request, f'Произошла ошибка при сохранении отзыва: {e}')
+            return redirect(reverse('add_events:add_review', kwargs={'pk': pk}))
+
+    # Для GET запроса показываем форму
+    context = {
+        'event': event,
+        'existing_review': existing_review,
+        'user_review_exists': existing_review is not None
+    }
+    return render(request, 'events/add_review.html', context)
+
+
+@login_required
+def delete_review(request, review_id):
+    review = get_object_or_404(EventRating, id=review_id)
+    event = review.event
+
+    # Проверяем права: либо автор отзыва, либо организатор мероприятия
+    if request.user != review.user and not event.is_user_organizer(request.user):
+        messages.error(request, 'У вас нет прав для удаления этого отзыва')
+        return redirect('add_events:event_reviews', pk=event.id)
+
+    review.delete()
+    messages.success(request, 'Отзыв успешно удален')
+    return redirect('add_events:event_reviews', pk=event.id)
+
+
+class EventReviewsView(DetailView):
+    model = Event
+    template_name = 'events/event_reviews.html'
+    context_object_name = 'event'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        event = self.get_object()
+        reviews = event.ratings.select_related('user').order_by('-timestamp')
+
+        # Проверяем, может ли текущий пользователь оставить отзыв
+        user_can_review = False
+        if self.request.user.is_authenticated:
+            user_can_review = (
+                    event.users_members.filter(id=self.request.user.id).exists() and
+                    not reviews.filter(user=self.request.user).exists()
+            )
+
+        context.update({
+            'reviews': reviews,
+            'can_review': user_can_review,
+            'user_review_exists': reviews.filter(
+                user=self.request.user).exists() if self.request.user.is_authenticated else False
+        })
+        return context
+
+
+def user_profile(request):
+    if not request.user.is_authenticated:
+        return redirect('users:login')
+
+    now = timezone.now()
+    attended_events = []
+
+    # Получаем все мероприятия пользователя
+    user_events = Event.objects.filter(users_members=request.user).order_by('-event_date')
+
+    for event in user_events:
+        # Проверяем, прошло ли мероприятие
+        event_datetime = datetime.combine(event.event_date, event.event_time)
+        has_started = event_datetime <= now
+
+        # Получаем отзыв пользователя
+        rating = EventRating.objects.filter(event=event, user=request.user).first()
+
+        attended_events.append({
+            'event': event,
+            'has_started': has_started,
+            'rating': rating
+        })
+
+    # Получаем организованные мероприятия (если пользователь организатор)
+    organized_events = []
+    if request.user.is_pro_user or request.user.is_super_user:
+        organized_events = Event.objects.filter(organizers=request.user).order_by('-event_date')
+
+    context = {
+        'user': request.user,
+        'attended_events': attended_events,
+        'organized_events': organized_events,
+        'now': now
+    }
+
+    return render(request, 'users/user_profile.html', context)

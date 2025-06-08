@@ -1,57 +1,268 @@
+{% extends 'base.html' %}
 {% load static %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2>{{ event.title_event }} - Отзывы</h2>
-    
-    <div class="reviews-container">
-        {% if reviews %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">{{ event.title_event }} - Отзывы</h2>
+        <div>
+            <a href="{{ request.META.HTTP_REFERER|default:'{% url "events:event_detail_view" event.id %}' }}"
+               class="btn btn-outline-primary me-2">
+                <i class="bi bi-arrow-left"></i> Назад
+            </a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'users:user_profile' %}" class="btn btn-secondary">
+                    <i class="bi bi-person"></i> Профиль
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if reviews %}
+        <div class="row">
             {% for review in reviews %}
-                <div class="card mb-3">
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 shadow-sm">
                     <div class="card-body">
-                        <div class="d-flex align-items-center mb-2">
+                        <div class="d-flex align-items-center mb-3">
                             {% if review.user.avatar %}
-                                <img src="{{ review.user.avatar.url }}" alt="Avatar" class="rounded-circle me-2" style="width: 50px; height: 50px; object-fit: cover;">
+                                <img src="{{ review.user.avatar.url }}" alt="Avatar"
+                                     class="rounded-circle me-3" style="width: 60px; height: 60px; object-fit: cover;">
                             {% else %}
-                                <div class="rounded-circle bg-secondary me-2" style="width: 50px; height: 50px;"></div>
+                                <div class="rounded-circle bg-secondary me-3 d-flex align-items-center justify-content-center"
+                                     style="width: 60px; height: 60px;">
+                                    <span class="text-white">{{ review.user.Name_User|first|upper }}</span>
+                                </div>
                             {% endif %}
                             <div>
-                                <h5 class="card-title mb-0">{{ review.user.Name_User }}</h5>
-                                {% if review.user.vk_id %}
-                                    <small class="text-muted">VK ID: {{ review.user.vk_id }}</small>
-                                {% endif %}
+                                <h5 class="card-title mb-1">{{ review.user.Name_User }}</h5>
+                                <div class="d-flex align-items-center">
+                                    <div class="star-rating me-2">
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= review.rating %}
+                                                <i class="bi bi-star-fill text-warning"></i>
+                                            {% else %}
+                                                <i class="bi bi-star text-warning"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                    <small class="text-muted">{{ review.timestamp|date:"d.m.Y H:i" }}</small>
+                                </div>
                             </div>
                         </div>
-                        
-                        <div class="rating mb-2">
-                            <strong>Оценка: {{ review.rating }}/5</strong>
-                        </div>
-                        
+
                         {% if review.likes %}
-                            <div class="mb-2">
-                                <h6>Что понравилось:</h6>
+                            <div class="mb-3">
+                                <h6 class="text-success"><i class="bi bi-hand-thumbs-up-fill me-2"></i>Понравилось:</h6>
                                 <p class="card-text">{{ review.likes }}</p>
                             </div>
                         {% endif %}
-                        
+
                         {% if review.dislikes %}
-                            <div class="mb-2">
-                                <h6>Что не понравилось:</h6>
+                            <div class="mb-3">
+                                <h6 class="text-danger"><i class="bi bi-hand-thumbs-down-fill me-2"></i>Не понравилось:</h6>
                                 <p class="card-text">{{ review.dislikes }}</p>
                             </div>
                         {% endif %}
+
+                        <div class="d-flex justify-content-end mt-3">
+                            {% if user == review.user or event.is_user_organizer %}
+                                <form action="{% url 'add_events:delete_review' review.id %}" method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                                            onclick="return confirm('Вы уверены, что хотите удалить этот отзыв?')">
+                                        <i class="bi bi-trash"></i> Удалить
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
-            {% endfor %}
-        {% else %}
-            <div class="alert alert-info">
-                Пока нет отзывов для этого мероприятия.
             </div>
-        {% endif %}
-    </div>
-    
-    <a href="{% url 'users:user_profile' %}" class="btn btn-secondary mt-3">
-        Выход
-    </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-chat-square-text fs-1 text-muted mb-3"></i>
+                <h5 class="card-title">Пока нет отзывов для этого мероприятия</h5>
+                <p class="card-text">Будьте первым, кто оставит отзыв!</p>
+                {% if user.is_authenticated and can_review %}
+                    <a href="{% url 'add_events:add_review' event.id %}" class="btn btn-primary">
+                        <i class="bi bi-chat-square-text"></i> Написать отзыв
+                    </a>
+                {% elif not user.is_authenticated %}
+                    <a href="{% url 'users:login' %}?next={{ request.path }}" class="btn btn-primary">
+                        <i class="bi bi-box-arrow-in-right"></i> Войти, чтобы оставить отзыв
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+
+    {% if user.is_authenticated and can_review and reviews %}
+        <div class="text-center mt-4">
+            <a href="{% url 'add_events:add_review' event.id %}" class="btn btn-primary">
+                <i class="bi bi-chat-square-text"></i> Оставить отзыв
+            </a>
+        </div>
+    {% endif %}
 </div>
+{% endblock %}
+
+
+{% block extra_css %}
+<style>
+    /* Основные стили из проекта */
+    body {
+        background-color: #1B2D34 !important;
+        color: #ffffff !important;
+        font-family: Roboto, sans-serif;
+    }
+
+    .logo {
+        height: 186px;
+        margin-top: 5px 0;
+    }
+
+    .home-link {
+        display: inline-block;
+        padding: 10px 20px;
+        background-color: #283845;
+        color: #ffffff;
+        text-decoration: none;
+        border-radius: 20px;
+        transition: all 0.3s ease;
+        margin-bottom: 20px;
+        border: 1px solid #384856;
+    }
+
+    .home-link:hover {
+        background-color: #384856;
+        text-decoration: none;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        color: #ffffff;
+    }
+
+    .profile-container {
+        background-color: #243B44;
+        border-radius: 15px;
+        padding: 40px;
+        margin-bottom: 30px;
+    }
+
+    /* Стили формы отзыва */
+    .review-form-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .review-form .form-label {
+        font-size: 18px;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+    }
+
+    .review-form .form-control {
+        background-color: #1a2631 !important;
+        border: 1px solid #384856;
+        color: white !important;
+        border-radius: 10px;
+        padding: 15px;
+        font-size: 16px;
+    }
+
+    .review-form .form-control:focus {
+        border-color: #02DAEE;
+        box-shadow: 0 0 0 0.25rem rgba(2, 218, 238, 0.25);
+    }
+
+    /* Стили для звездного рейтинга */
+    .star-rating {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: center;
+        margin: 20px 0 30px;
+    }
+
+    .star-rating input {
+        display: none;
+    }
+
+    .star-rating label {
+        font-size: 40px;
+        color: #889199;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin: 0 5px;
+    }
+
+    .star-rating input:checked ~ label,
+    .star-rating input:hover ~ label,
+    .star-rating label:hover,
+    .star-rating label:hover ~ label {
+        color: #FFD700;
+    }
+
+    /* Стили кнопок */
+    .btn-submit {
+        background-color: #02DAEE;
+        color: #1B2D34;
+        border: none;
+        border-radius: 30px;
+        padding: 12px 35px;
+        font-size: 18px;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+    .btn-submit:hover {
+        background-color: #00B4C5;
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 180, 197, 0.3);
+    }
+
+    .btn-cancel {
+        background-color: transparent;
+        color: #ffffff;
+        border: 1px solid #889199;
+        border-radius: 30px;
+        padding: 12px 35px;
+        font-size: 18px;
+        transition: all 0.3s;
+    }
+
+    .btn-cancel:hover {
+        background-color: #283845;
+        color: #ffffff;
+        border-color: #02DAEE;
+    }
+
+    /* Адаптивность */
+    @media (max-width: 768px) {
+        .profile-container {
+            padding: 25px;
+        }
+
+        .star-rating label {
+            font-size: 32px;
+        }
+
+        .btn-submit,
+        .btn-cancel {
+            padding: 10px 25px;
+            font-size: 16px;
+            display: block;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+
+        .form-actions {
+            display: flex;
+            flex-direction: column;
+        }
+    }
+</style>
 {% endblock %}
